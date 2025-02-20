@@ -42,6 +42,7 @@
             k9s
             bun
             uv
+            starship
             (azure-cli.withExtensions [
               azure-cli.extensions.aks-preview
               azure-cli.extensions.bastion
@@ -96,8 +97,20 @@
           nix.settings.experimental-features = "nix-command flakes";
 
           # Enable alternative shell support in nix-darwin.
-          programs.fish.enable = true;
-          programs.zsh.enable = true;
+          programs.fish = {
+            enable = true;
+            interactiveShellInit = ''
+              set fish_greeting
+              starship init fish | source
+            '';
+          };
+          
+          programs.zsh = {
+            enable = true;
+            interactiveShellInit = ''
+              eval "$(starship init zsh)"
+            '';
+          };
           # Enable rosetta
           system.activationScripts.extraActivation.text = ''
             softwareupdate --install-rosetta --agree-to-license
@@ -174,6 +187,12 @@
                 # The state version is required and should stay at the version you
                 # originally installed.
                 home.stateVersion = "24.11";
+
+                programs.starship = {
+                  enable = true;
+                  settings = {
+                  };
+                };
 
                 programs.git = {
                   enable = true;
