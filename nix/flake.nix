@@ -50,6 +50,9 @@
             ])
             nixfmt-rfc-style
             gh
+            kubelogin
+            cilium-cli
+            hubble
           ];
           environment.variables.EDITOR = "vim";
 
