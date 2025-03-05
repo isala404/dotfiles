@@ -32,6 +32,7 @@
           nixpkgs.config.allowUnfree = true;
 
           environment.systemPackages = with pkgs; [
+            watch
             vim
             mkalias
             go
@@ -141,7 +142,7 @@
             '';
 
           # Enable sudo touch id auth
-          security.pam.enableSudoTouchIdAuth = true;
+          security.pam.services.sudo_local.touchIdAuth = true;
 
           # Set Git commit hash for darwin-version.
           system.configurationRevision = self.rev or self.dirtyRev or null;
