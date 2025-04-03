@@ -38,12 +38,15 @@
             go
             rustup
             git
+            git-lfs
             kubectl
             kubernetes-helm
             k9s
             bun
             uv
             starship
+            nodejs_23
+            poetry
             (azure-cli.withExtensions [
               azure-cli.extensions.aks-preview
               azure-cli.extensions.bastion
@@ -67,6 +70,7 @@
             };
             brews = [
               "mas"
+              "jmeter"
             ];
             casks = [
               "spotify"
