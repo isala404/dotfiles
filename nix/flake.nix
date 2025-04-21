@@ -57,6 +57,7 @@
             kubelogin
             cilium-cli
             hubble
+            yt-dlp
           ];
           environment.variables.EDITOR = "vim";
 
