@@ -83,6 +83,7 @@
               "google-chrome"
               "cursor"
               "workspace-one-intelligent-hub"
+              "ollama"
             ];
             masApps = {
             };
