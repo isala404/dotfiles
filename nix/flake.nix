@@ -45,7 +45,7 @@
             bun
             uv
             starship
-            nodejs_23
+            nodejs_20
             poetry
             (azure-cli.withExtensions [
               azure-cli.extensions.aks-preview
@@ -58,6 +58,8 @@
             cilium-cli
             hubble
             yt-dlp
+            pnpm
+            ffmpeg
           ];
           environment.variables.EDITOR = "vim";
 
@@ -84,6 +86,10 @@
               "cursor"
               "workspace-one-intelligent-hub"
               "ollama"
+              "postman"
+              "obs"
+              "dbeaver-community"
+              "visual-studio-code"
             ];
             masApps = {
             };
