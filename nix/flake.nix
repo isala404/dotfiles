@@ -60,6 +60,7 @@
             yt-dlp
             pnpm
             ffmpeg
+            llama-cpp
           ];
           environment.variables.EDITOR = "vim";
 
@@ -85,7 +86,6 @@
               "google-chrome"
               "cursor"
               "workspace-one-intelligent-hub"
-              "ollama"
               "postman"
               "obs"
               "dbeaver-community"
