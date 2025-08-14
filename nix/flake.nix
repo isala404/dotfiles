@@ -74,6 +74,8 @@
             brews = [
               "mas"
               "jmeter"
+              "llama.cpp"
+              "opencode"
             ];
             casks = [
               "spotify"
@@ -85,11 +87,11 @@
               "google-chrome"
               "cursor"
               "workspace-one-intelligent-hub"
-              "ollama"
               "postman"
               "obs"
               "dbeaver-community"
               "visual-studio-code"
+              "claude-code"
             ];
             masApps = {
             };
