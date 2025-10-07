@@ -131,9 +131,20 @@
               eval "$(starship init zsh)"
             '';
           };
-          # Enable rosetta
+          
+          # Set fish as the default shell
+          environment.shells = [ pkgs.fish pkgs.zsh ];
+          
+          # Set user's default shell to fish
+          users.users.isala.shell = pkgs.fish;
+          
+          # Enable rosetta and set default shell
           system.activationScripts.extraActivation.text = ''
             softwareupdate --install-rosetta --agree-to-license
+            
+            # Set fish as default shell for user
+            echo "Setting fish as default shell for isala..." >&2
+            dscl . -create /Users/isala UserShell /run/current-system/sw/bin/fish
           '';
 
           system.activationScripts.applications.text =
@@ -205,7 +216,7 @@
             };
             home-manager.backupFileExtension = "backup";
             home-manager.users.isala =
-              { pkgs, ... }:
+              { pkgs, config, ... }:
               {
                 home.packages = [ ];
 
@@ -286,6 +297,42 @@
 
                 xdg.configFile."nix/nix.conf".text = ''
                   experimental-features = nix-command flakes
+                '';
+
+                # Configure VS Code / Cursor to use fish shell
+                # Using home.activation to smartly merge settings without overwriting
+                home.activation.configureVSCodeFish = config.lib.dag.entryAfter ["writeBoundary"] ''
+                  # Function to update JSON settings
+                  update_settings() {
+                    local settings_file="$1"
+                    local settings_dir=$(dirname "$settings_file")
+                    
+                    # Create directory if it doesn't exist
+                    mkdir -p "$settings_dir"
+                    
+                    # Create settings file if it doesn't exist
+                    if [ ! -f "$settings_file" ]; then
+                      echo '{}' > "$settings_file"
+                    fi
+                    
+                    # Use jq to merge settings, preserving existing values
+                    ${pkgs.jq}/bin/jq '. + {
+                      "terminal.integrated.defaultProfile.osx": "fish",
+                      "terminal.integrated.profiles.osx": (."terminal.integrated.profiles.osx" // {}) + {
+                        "fish": {
+                          "path": "/run/current-system/sw/bin/fish"
+                        }
+                      }
+                    }' "$settings_file" > "$settings_file.tmp" && mv "$settings_file.tmp" "$settings_file"
+                    
+                    echo "Updated terminal settings in $settings_file"
+                  }
+                  
+                  # Update Cursor settings
+                  update_settings "$HOME/Library/Application Support/Cursor/User/settings.json"
+                  
+                  # Update VS Code settings
+                  update_settings "$HOME/Library/Application Support/Code/User/settings.json"
                 '';
 
               };
