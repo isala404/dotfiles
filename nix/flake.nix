@@ -75,6 +75,8 @@
               "mas"
               "jmeter"
               "llama.cpp"
+              "gemini-cli"
+              "kind"
               "opencode"
             ];
             casks = [
@@ -82,7 +84,7 @@
               "discord"
               "rancher"
               "brave-browser"
-              "wireshark"
+              "wireshark-app"
               "vlc"
               "google-chrome"
               "cursor"
@@ -165,6 +167,10 @@
           # $ darwin-rebuild changelog
           system.stateVersion = 6;
 
+          # Required by nix-darwin for options that apply to a specific user
+          # (e.g., homebrew.enable). Set to the user who runs darwin-rebuild.
+          system.primaryUser = "isala";
+
           # The platform the configuration will be used on.
           nixpkgs.hostPlatform = "aarch64-darwin";
         };
@@ -197,6 +203,7 @@
               name = "isala";
               home = "/Users/isala";
             };
+            home-manager.backupFileExtension = "backup";
             home-manager.users.isala =
               { pkgs, ... }:
               {
@@ -276,6 +283,10 @@
                     };
                   };
                 };
+
+                xdg.configFile."nix/nix.conf".text = ''
+                  experimental-features = nix-command flakes
+                '';
 
               };
           }
