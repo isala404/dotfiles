@@ -36,6 +36,8 @@
             vim
             mkalias
             go
+            gopls
+            golangci-lint
             rustup
             git
             git-lfs
@@ -60,10 +62,12 @@
             yt-dlp
             pnpm
             ffmpeg
+            clang
+            clang-tools
           ];
           environment.variables = {
             EDITOR = "vim";
-            PATH = "$HOME/.rd/bin:$PATH";
+            PATH = "$HOME/.rd/bin:$HOME/.bun/bin:$PATH";
           };
 
           homebrew = {
