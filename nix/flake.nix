@@ -64,6 +64,10 @@
             ffmpeg
             clang
             clang-tools
+            tmux
+            trivy
+            syft
+            checkov
           ];
           environment.variables = {
             EDITOR = "vim";
