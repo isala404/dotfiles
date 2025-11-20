@@ -64,10 +64,13 @@
             ffmpeg
             clang
             clang-tools
+            darwin.libresolv
             tmux
             trivy
             syft
-            checkov
+            # checkov  # Temporarily disabled - pyarrow build fails on macOS ARM64 + Python 3.13
+            yarn
+            tree
           ];
           environment.variables = {
             EDITOR = "vim";
@@ -89,6 +92,8 @@
               "gemini-cli"
               "kind"
               "opencode"
+              "iproute2mac"
+              "k3d"
             ];
             casks = [
               "spotify"
@@ -161,7 +166,7 @@
               env = pkgs.buildEnv {
                 name = "system-applications";
                 paths = config.environment.systemPackages;
-                pathsToLink = "/Applications";
+                pathsToLink = [ "/Applications" ];
               };
             in
             pkgs.lib.mkForce ''
@@ -477,35 +482,35 @@
 
                 programs.git = {
                   enable = true;
-                  userName = "Isala";
-                  userEmail = "mail@isala.me";
-                  aliases = {
-                    lol = "log --graph --decorate --pretty=oneline --abbrev-commit --all";
+                  settings = {
+                    user = {
+                      name = "Isala";
+                      email = "mail@isala.me";
+                    };
+                    alias = {
+                      lol = "log --graph --decorate --pretty=oneline --abbrev-commit --all";
 
-                    # Get the current branch name (not so useful in itself, but used in
-                    # other aliases)
-                    branch-name = "!git rev-parse --abbrev-ref HEAD";
+                      # Get the current branch name (not so useful in itself, but used in
+                      # other aliases)
+                      branch-name = "!git rev-parse --abbrev-ref HEAD";
 
-                    # Push the current branch to the remote "origin", and set it to track
-                    # the upstream branch
-                    publish = "!git push -u origin $(git branch-name)";
+                      # Push the current branch to the remote "origin", and set it to track
+                      # the upstream branch
+                      publish = "!git push -u origin $(git branch-name)";
 
-                    # Delete the remote version of the current branch
-                    unpublish = "!git push origin :$(git branch-name)";
+                      # Delete the remote version of the current branch
+                      unpublish = "!git push origin :$(git branch-name)";
 
-                    # Switch branches via fzf
-                    fzf = "!git checkout $(git branch --color=always --all --sort=-committerdate | grep -v HEAD | fzf --height 50% --ansi --no-multi --preview-window right:65%  --preview 'git log -n 50 --color=always --date=short --pretty=\"format:%C(auto)%cd %h%d %s\" $(sed \"s/.* //\" <<< {})' | sed \"s/.* //\")";
-                  };
-
-                  ignores = [ ".DS_Store" ];
-
-                  extraConfig = {
-                    init = {
-                      defaultBranch = "main";
+                      # Switch branches via fzf
+                      fzf = "!git checkout $(git branch --color=always --all --sort=-committerdate | grep -v HEAD | fzf --height 50% --ansi --no-multi --preview-window right:65%  --preview 'git log -n 50 --color=always --date=short --pretty=\"format:%C(auto)%cd %h%d %s\" $(sed \"s/.* //\" <<< {})' | sed \"s/.* //\")";
                     };
 
                     core = {
                       ignorecase = "false";
+                    };
+
+                    init = {
+                      defaultBranch = "main";
                     };
 
                     pull = {
@@ -538,6 +543,7 @@
                       cmd = "nvim -d \"$LOCAL\" \"$REMOTE\"";
                     };
                   };
+                  ignores = [ ".DS_Store" ];
                 };
 
                 xdg.configFile."nix/nix.conf".text = ''
