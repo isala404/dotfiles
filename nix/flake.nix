@@ -71,6 +71,8 @@
             # checkov  # Temporarily disabled - pyarrow build fails on macOS ARM64 + Python 3.13
             yarn
             tree
+            awscli2
+            eksctl
           ];
           environment.variables = {
             EDITOR = "vim";
@@ -110,6 +112,7 @@
               "dbeaver-community"
               "visual-studio-code"
               "claude-code"
+              "zed"
             ];
             masApps = {
             };
