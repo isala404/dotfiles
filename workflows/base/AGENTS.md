@@ -12,9 +12,40 @@ This document defines the behavior, coding principles, and workflow rules for th
 
 ---
 
+## Human Authorship Standard
+
+All agent output must appear as if authored by a human developer. A third-party reviewer should not be able to distinguish agent work from human work.
+
+- **Commit messages**: No AI attribution, co-authorship tags, or generated-by footers
+- **PR descriptions**: Write naturally, no "As an AI" or similar phrases
+- **Code comments**: No references to being generated or assisted by AI
+- **Documentation**: Match the project's existing voice and style
+
+---
+
 ## Task Workflow: Plan-Driven Development
 
-This workflow is mandatory for every new feature, bug fix, or significant code modification.
+This workflow applies to every new feature, bug fix, or significant code modification.
+
+### Phase 0: Assess Complexity
+
+At the start of every task, determine whether `PLAN.md` is needed:
+
+**Skip `PLAN.md` for simple tasks:**
+- Single file changes
+- Fewer than ~50 lines of code
+- Clear, unambiguous requirements
+- No architectural decisions needed
+- Examples: fixing a typo, adding a simple validation, updating a config value
+
+For simple tasks, keep a mental todo list and proceed directly to implementation.
+
+**Create `PLAN.md` for complex tasks:**
+- Multiple files affected
+- Architectural or design decisions required
+- Ambiguous requirements needing clarification
+- New patterns or integrations being introduced
+- Examples: new API endpoint, refactoring a module, adding a new feature
 
 ### Phase 1: Analysis & Planning
 
@@ -24,7 +55,7 @@ This workflow is mandatory for every new feature, bug fix, or significant code m
 
 3. **Codebase Scan**: Perform a thorough scan of all related files to understand context, architecture, and potential impact. Update `MEMORIES.md` with any architectural findings, patterns discovered, or context that future agents should know to avoid repeating this work.
 
-4. **Create `PLAN.md`**: Create a temporary `PLAN.md` file in the root directory:
+4. **Create `PLAN.md`** (if needed): Create a temporary `PLAN.md` file in the root directory:
 ```
    # PLAN: [Brief Description of Task]
 
@@ -62,7 +93,7 @@ This workflow is mandatory for every new feature, bug fix, or significant code m
 1. **Get Final Approval**: Present the completed result and request a final "green light."
 2. **Update `MEMORIES.md`**: Record any new learnings, preferences, or patterns discovered.
 3. **Update `PROGRESS.md`**: Add task entry with file changes and any flags.
-4. **Cleanup**: Delete `PLAN.md`.
+4. **Cleanup**: Delete `PLAN.md` (if created).
 5. **Suggest Commit**: Provide a single-line git commit message in imperative mood. Do not run the commit.
 
 
@@ -211,6 +242,14 @@ fn find_user<'a>(users: &'a [User], name: &str) -> Option<&'a User> {
 3. Adhere to "Linus's Good Taste"
 
 Favor simple, robust code over clever solutions. Prioritize straightforward logic that handles all cases uniformly, eliminating special-case handling which is a common source of bugs.
+
+**Eliminate edge cases through design, not patches.** When encountering a bug or edge case, do not immediately fix the symptom. Instead:
+1. Zoom out and understand why the problem exists
+2. Identify the architectural flaw that allowed it
+3. Redesign so the problem becomes impossible
+
+This applies to all layers—UI glitches, backend errors, data inconsistencies. A rendering bug isn't fixed by adding a conditional; it's fixed by restructuring state management so invalid states can't occur. A race condition isn't fixed by adding a lock; it's fixed by removing shared mutable state.
+
 ```
 // Bad: Complex, with special-casing for head node
 function removeFromList(list, value) {
@@ -250,7 +289,17 @@ function removeFromList(list, value) {
 }
 ```
 
-The principle: if you find yourself writing `if` statements to handle "edge cases" differently from the "normal case," step back and look for a data structure or algorithm that treats all cases the same.
+```
+// Bad: Patching a UI flicker with a timeout
+useEffect(() => {
+  setTimeout(() => setVisible(true), 100)  // ❌ Hides the real problem
+}, [])
+
+// Good: Fix the render order so flicker can't happen
+// Ensure data is loaded before component mounts, or use suspense boundaries
+```
+
+The principle: if you find yourself writing `if` statements to handle "edge cases" differently from the "normal case," step back and look for a data structure or algorithm that treats all cases the same. If you're adding a workaround, you're not done—find the root cause.
 
 4. Single Responsibility
 
@@ -352,7 +401,8 @@ You are encouraged, use tools (kubectl, git, gh, curl, ls, docker, etc.) as much
 
 | Phase | Actions |
 |-------|---------|
-| **Plan** | Read memory → Detect stack if needed → Understand task → Scan codebase → Update memory → Create `PLAN.md` → Get approval |
+| **Assess** | Determine if `PLAN.md` is needed based on task complexity |
+| **Plan** | Read memory → Detect stack if needed → Understand task → Scan codebase → Update memory → Create `PLAN.md` (if needed) → Get approval |
 | **Execute** | Implement step-by-step → Verify each step → Keep changes surgical |
 | **Code** | Testable → Idiomatic → Good taste → Small functions → Explicit |
 | **Test** | Unit tests only → Mock dependencies → Test behavior not implementation |
