@@ -16,34 +16,34 @@
     # ─────────────────────────────────────────
     # Modern Rust CLI replacements (faster & better UX)
     # ─────────────────────────────────────────
-    eza           # ls replacement with icons & git awareness
-    bat           # cat replacement with syntax highlighting
-    fd            # find replacement, much faster
-    ripgrep       # grep replacement, blazing fast
-    sd            # sed replacement, simpler syntax
-    dust          # du replacement, visual disk usage
-    bottom        # top/htop replacement (btm command)
-    procs         # ps replacement with colors
-    zoxide        # cd replacement with smart jumping (z command)
-    delta         # diff viewer for git with syntax highlighting
-    hyperfine     # benchmarking tool
-    tokei         # code statistics
-    tealdeer      # tldr client for quick command help
-    ouch          # compression/decompression made easy
-    xh            # httpie/curl alternative
+    eza # ls replacement with icons & git awareness
+    bat # cat replacement with syntax highlighting
+    fd # find replacement, much faster
+    ripgrep # grep replacement, blazing fast
+    sd # sed replacement, simpler syntax
+    dust # du replacement, visual disk usage
+    bottom # top/htop replacement (btm command)
+    procs # ps replacement with colors
+    zoxide # cd replacement with smart jumping (z command)
+    delta # diff viewer for git with syntax highlighting
+    hyperfine # benchmarking tool
+    tokei # code statistics
+    # tealdeer      # tldr client - tests failing on darwin
+    ouch # compression/decompression made easy
+    xh # httpie/curl alternative
 
     # ─────────────────────────────────────────
     # Core utilities
     # ─────────────────────────────────────────
     watch
     vim
-    neovim        # Required for nvimdiff (git merge tool)
+    neovim # Required for nvimdiff (git merge tool)
     mkalias
     wget
     curl
     jq
     yq-go
-    fzf           # fuzzy finder (essential for productivity)
+    fzf # fuzzy finder (essential for productivity)
     tree
     htop
     ncdu
@@ -54,8 +54,8 @@
     git
     git-lfs
     gh
-    lazygit       # TUI for git
-    difftastic    # structural diff tool
+    lazygit # TUI for git
+    difftastic # structural diff tool
 
     # ─────────────────────────────────────────
     # Languages & Runtimes
@@ -64,7 +64,7 @@
     gopls
     golangci-lint
     rustup
-    rust-analyzer     # Rust LSP (also available via rustup)
+    rust-analyzer # Rust LSP (also available via rustup)
     nodejs_24
     bun
     uv
@@ -73,12 +73,12 @@
     # ─────────────────────────────────────────
     # Language Servers & Formatters (for editors)
     # ─────────────────────────────────────────
-    nodePackages.prettier           # JS/TS/JSON/YAML formatter
+    nodePackages.prettier # JS/TS/JSON/YAML formatter
     nodePackages.typescript-language-server
-    yaml-language-server            # YAML LSP with Kubernetes schema support
-    terraform-ls                    # Terraform LSP
-    nil                             # Nix LSP
-    lua-language-server             # Lua LSP
+    yaml-language-server # YAML LSP with Kubernetes schema support
+    terraform-ls # Terraform LSP
+    nil # Nix LSP
+    lua-language-server # Lua LSP
 
     # ─────────────────────────────────────────
     # Kubernetes & Cloud (Platform Engineering)
@@ -87,23 +87,23 @@
     kubernetes-helm
     k9s
     kustomize
-    stern         # multi-pod log tailing
-    kubectx       # fast context/namespace switching
-    kubecolor     # colorize kubectl output
-    krew          # kubectl plugin manager
-    kubeconform   # kubernetes manifest validation
-    kube-linter   # kubernetes yaml linter
-    popeye        # kubernetes cluster sanitizer
+    stern # multi-pod log tailing
+    kubectx # fast context/namespace switching
+    kubecolor # colorize kubectl output
+    krew # kubectl plugin manager
+    kubeconform # kubernetes manifest validation
+    kube-linter # kubernetes yaml linter
+    popeye # kubernetes cluster sanitizer
 
     # ─────────────────────────────────────────
     # Security & Scanning
     # ─────────────────────────────────────────
     trivy
     syft
-    checkov
-    grype         # vulnerability scanner
-    cosign        # container signing
-    dive          # explore docker image layers
+    # checkov      # temporarily disabled - pyarrow build fails on Python 3.13/arm64
+    grype # vulnerability scanner
+    cosign # container signing
+    dive # explore docker image layers
 
     # ─────────────────────────────────────────
     # Media
@@ -124,15 +124,15 @@
     starship
     fish
     tmux
-    zellij        # modern terminal multiplexer
-    direnv        # per-directory environment variables
-    nix-direnv    # fast direnv nix integration
+    zellij # modern terminal multiplexer
+    direnv # per-directory environment variables
+    nix-direnv # fast direnv nix integration
 
     # ─────────────────────────────────────────
     # Nix tooling
     # ─────────────────────────────────────────
     nixfmt-rfc-style
-    nix-tree      # visualize nix derivation trees
+    nix-tree # visualize nix derivation trees
   ];
 
   environment.variables = {
@@ -242,20 +242,23 @@
   };
 
   # Enable shells
-  environment.shells = [ pkgs.fish pkgs.zsh ];
+  environment.shells = [
+    pkgs.fish
+    pkgs.zsh
+  ];
 
   # =============================================
   # Fonts (Best programming fonts)
   # =============================================
   fonts.packages = with pkgs; [
     # Primary fonts
-    nerd-fonts.jetbrains-mono      # Excellent ligatures, developer favorite
-    nerd-fonts.fira-code           # Popular ligature font
-    nerd-fonts.meslo-lg            # Great for powerline prompts
-    nerd-fonts.cascadia-code       # Microsoft's coding font
-    nerd-fonts.hack                # Clean, easy to read
-    nerd-fonts.victor-mono         # Cursive italics
-    nerd-fonts.symbols-only        # Just the icons/symbols
+    nerd-fonts.jetbrains-mono # Excellent ligatures, developer favorite
+    nerd-fonts.fira-code # Popular ligature font
+    nerd-fonts.meslo-lg # Great for powerline prompts
+    nerd-fonts.caskaydia-cove # Microsoft's Cascadia Code (nerd-font name)
+    nerd-fonts.hack # Clean, easy to read
+    nerd-fonts.victor-mono # Cursive italics
+    nerd-fonts.symbols-only # Just the icons/symbols
   ];
 
   # =============================================
@@ -269,7 +272,7 @@
       env = pkgs.buildEnv {
         name = "system-applications";
         paths = config.environment.systemPackages;
-        pathsToLink = "/Applications";
+        pathsToLink = [ "/Applications" ];
       };
     in
     pkgs.lib.mkForce ''

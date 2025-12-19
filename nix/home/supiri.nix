@@ -7,10 +7,12 @@
 
   home.packages = [ ];
 
-  # Git user info (full name for personal)
-  programs.git = {
-    userName = "Isala Piyarisi";
-    userEmail = "mail@isala.me";
-    extraConfig.pull.rebase = true;  # Personal preference
+  # Git user info (using new settings API)
+  programs.git.settings = {
+    user = {
+      name = "Isala Piyarisi";
+      email = "mail@isala.me";
+    };
+    pull.rebase = true; # Personal preference
   };
 }

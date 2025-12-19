@@ -39,7 +39,10 @@
     isNormalUser = true;
     home = "/home/isala";
     shell = pkgs.fish;
-    extraGroups = [ "wheel" "docker" ];
+    extraGroups = [
+      "wheel"
+      "docker"
+    ];
     openssh.authorizedKeys.keys = [
       # Add your SSH public keys here
       # "ssh-ed25519 AAAA..."

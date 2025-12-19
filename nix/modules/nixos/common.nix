@@ -54,7 +54,7 @@
   # Basic firewall
   networking.firewall = {
     enable = true;
-    allowedTCPPorts = [ 22 ];  # SSH
+    allowedTCPPorts = [ 22 ]; # SSH
   };
 
   # Enable SSH

@@ -16,9 +16,9 @@
     # Cloud & Infrastructure
     # ─────────────────────────────────────────
     awscli2
-    eksctl          # EKS management
+    eksctl # EKS management
     terraform
-    opentofu        # Open-source Terraform
+    opentofu # Open-source Terraform
     (azure-cli.withExtensions [
       azure-cli.extensions.aks-preview
     ])
@@ -26,19 +26,19 @@
     # ─────────────────────────────────────────
     # GitOps & CD
     # ─────────────────────────────────────────
-    flux            # GitOps toolkit
-    argocd          # GitOps CD
-    kustomize       # (already in common, but explicit here)
+    flux # GitOps toolkit
+    argocd # GitOps CD
+    kustomize # (already in common, but explicit here)
 
     # ─────────────────────────────────────────
     # Security Tools
     # ─────────────────────────────────────────
-    kubeseal        # Sealed secrets
-    sops            # Secret encryption
-    age             # Modern encryption
-    cloudflared     # Cloudflare tunnels
+    kubeseal # Sealed secrets
+    sops # Secret encryption
+    age # Modern encryption
+    cloudflared # Cloudflare tunnels
     nmap
-    mtr             # Network diagnostics
+    mtr # Network diagnostics
 
     # ─────────────────────────────────────────
     # Build & Development Tools
@@ -46,21 +46,21 @@
     cmake
     gnupg
     swig
-    cocoapods       # iOS development
+    cocoapods # iOS development
 
     # ─────────────────────────────────────────
     # Document & Typesetting
     # ─────────────────────────────────────────
-    tectonic        # Modern LaTeX
-    typst           # Modern typesetting
-    tesseract       # OCR
-    pandoc          # Document conversion
+    tectonic # Modern LaTeX
+    typst # Modern typesetting
+    tesseract # OCR
+    pandoc # Document conversion
 
     # ─────────────────────────────────────────
     # File Management
     # ─────────────────────────────────────────
-    yazi            # Terminal file manager
-    imagemagick     # Image manipulation
+    yazi # Terminal file manager
+    imagemagick # Image manipulation
   ];
 
   environment.variables = {
@@ -147,6 +147,7 @@
       "mas"
       "llama.cpp"
       "gemini-cli"
+      "opencode"
     ];
 
     casks = [
@@ -158,10 +159,11 @@
       "cursor"
       "zed"
       "alacritty"
-      "wezterm"         # Alternative terminal
+      "wezterm" # Alternative terminal
       "dbeaver-community"
       "postman"
-      "orbstack"        # Docker & Linux VMs
+      "orbstack" # Docker & Linux VMs
+      "claude-code"
 
       # AI/ML
       "lm-studio"
@@ -175,14 +177,14 @@
       "spotify"
       "vlc"
       "obs"
-      "iina"            # Modern video player
+      "iina" # Modern video player
 
       # Utilities
       "aldente"
       "macs-fan-control"
       "transmission"
       "google-drive"
-      "raycast"         # Spotlight replacement
+      "raycast" # Spotlight replacement
 
       # Gaming & Emulation
       "steam"
@@ -190,7 +192,7 @@
       # Network & Security
       "openvpn-connect"
       "tailscale"
-      "wireshark"
+      "wireshark-app"
     ];
 
     masApps = { };

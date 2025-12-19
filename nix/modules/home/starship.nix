@@ -232,8 +232,14 @@
         discharging_symbol = " ";
         format = "[$symbol$percentage]($style) ";
         display = [
-          { threshold = 20; style = "bold red"; }
-          { threshold = 40; style = "bold yellow"; }
+          {
+            threshold = 20;
+            style = "bold red";
+          }
+          {
+            threshold = 40;
+            style = "bold yellow";
+          }
         ];
       };
 

@@ -1,6 +1,11 @@
 # Editor configurations (VS Code, Cursor, Zed, Alacritty)
 # Enhanced with better settings for platform engineers
-{ pkgs, config, lib, ... }:
+{
+  pkgs,
+  config,
+  lib,
+  ...
+}:
 {
   # =============================================
   # Zed Editor Configuration
@@ -20,8 +25,8 @@
     buffer_font_size = 14;
     buffer_font_family = "JetBrainsMono Nerd Font";
     buffer_font_features = {
-      calt = true;   # Contextual alternates (ligatures)
-      liga = true;   # Standard ligatures
+      calt = true; # Contextual alternates (ligatures)
+      liga = true; # Standard ligatures
     };
 
     # Editor behavior
@@ -55,9 +60,9 @@
     agent = {
       default_model = {
         provider = "copilot_chat";
-        model = "claude-sonnet-4-20250514";
+        model = "claude-opus-4.5";
       };
-      model_parameters = [];
+      model_parameters = [ ];
     };
 
     # Language-specific settings
@@ -66,7 +71,10 @@
       YAML = {
         tab_size = 2;
         formatter = "language_server";
-        language_servers = ["yaml-language-server" "..."];
+        language_servers = [
+          "yaml-language-server"
+          "..."
+        ];
       };
       # Terraform/HCL
       Terraform = {
@@ -99,7 +107,7 @@
         tab_size = 2;
         formatter.external = {
           command = "nixfmt";
-          arguments = [];
+          arguments = [ ];
         };
       };
       # Markdown
@@ -136,8 +144,16 @@
 
     # File associations
     file_types = {
-      Dockerfile = ["Dockerfile*" "*.dockerfile"];
-      YAML = ["*.yaml" "*.yml" "*.yaml.j2" "*.yml.j2"];
+      Dockerfile = [
+        "Dockerfile*"
+        "*.dockerfile"
+      ];
+      YAML = [
+        "*.yaml"
+        "*.yml"
+        "*.yaml.j2"
+        "*.yml.j2"
+      ];
     };
 
     # Project panel
@@ -296,7 +312,7 @@
   # =============================================
   # VS Code / Cursor Terminal Configuration
   # =============================================
-  home.activation.configureVSCodeFish = config.lib.dag.entryAfter ["writeBoundary"] ''
+  home.activation.configureVSCodeFish = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     update_settings() {
       local settings_file="$1"
       local settings_dir=$(dirname "$settings_file")

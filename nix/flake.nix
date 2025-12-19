@@ -26,7 +26,13 @@
       # =============================================
       # Helper function to create Darwin configurations
       # =============================================
-      mkDarwinSystem = { hostname, user, hostConfig, homeConfig }:
+      mkDarwinSystem =
+        {
+          hostname,
+          user,
+          hostConfig,
+          homeConfig,
+        }:
         nix-darwin.lib.darwinSystem {
           modules = [
             hostConfig
@@ -58,7 +64,13 @@
       # Helper function to create NixOS configurations
       # (For future Ubuntu/Linux servers)
       # =============================================
-      mkNixosSystem = { hostname, user, hostConfig, homeConfig }:
+      mkNixosSystem =
+        {
+          hostname,
+          user,
+          hostConfig,
+          homeConfig,
+        }:
         nixpkgs.lib.nixosSystem {
           modules = [
             hostConfig

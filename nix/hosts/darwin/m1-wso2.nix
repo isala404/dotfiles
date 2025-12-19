@@ -19,32 +19,32 @@
       azure-cli.extensions.bastion
       azure-cli.extensions.ssh
     ])
-    kubelogin       # Azure AD auth for AKS
+    kubelogin # Azure AD auth for AKS
 
     # ─────────────────────────────────────────
     # Kubernetes Networking (Cilium stack)
     # ─────────────────────────────────────────
-    cilium-cli      # Cilium management
-    hubble          # Cilium observability
+    cilium-cli # Cilium management
+    hubble # Cilium observability
 
     # ─────────────────────────────────────────
     # GitOps & CD
     # ─────────────────────────────────────────
-    argocd          # GitOps CD
-    fluxcd          # Alternative GitOps
+    argocd # GitOps CD
+    fluxcd # Alternative GitOps
 
     # ─────────────────────────────────────────
     # Development
     # ─────────────────────────────────────────
-    pnpm            # Fast package manager
-    kind            # Local k8s clusters
-    k3d             # Local k8s clusters
+    pnpm # Fast package manager
+    kind # Local k8s clusters
+    k3d # Local k8s clusters
 
     # ─────────────────────────────────────────
     # Testing & Performance
     # ─────────────────────────────────────────
-    k6              # Load testing
-    vegeta          # HTTP load testing
+    k6 # Load testing
+    vegeta # HTTP load testing
   ];
 
   environment.variables = {
@@ -92,11 +92,11 @@
     };
 
     brews = [
-      "mas"           # Mac App Store CLI
-      "jmeter"        # Performance testing
-      "llama.cpp"     # Local LLM inference
-      "gemini-cli"    # Google Gemini
-      "opencode"      # AI coding assistant
+      "mas" # Mac App Store CLI
+      "jmeter" # Performance testing
+      "llama.cpp" # Local LLM inference
+      "gemini-cli" # Google Gemini
+      "opencode" # AI coding assistant
     ];
 
     casks = [
@@ -107,9 +107,11 @@
       # Development
       "visual-studio-code"
       "cursor"
-      "rancher"         # Container management (Docker alternative)
+      "rancher" # Container management (Docker alternative)
       "postman"
       "dbeaver-community"
+      "claude-code"
+      "zed"
 
       # Communication
       "discord"
@@ -122,7 +124,7 @@
       # Utilities
       "vlc"
       "obs"
-      "wireshark"       # Network analysis
+      "wireshark-app" # Network analysis
     ];
 
     masApps = { };
