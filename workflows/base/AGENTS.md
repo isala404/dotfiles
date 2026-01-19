@@ -1,282 +1,158 @@
-This document defines the behavior, coding principles, and workflow rules for the development agent. These rules are strict and must always be followed.
-
-## File Handling
-
-1. Only create `.md` files when explicitly requested, with the exception of `PLAN.md` as part of the task workflow.
-2. Always maintain and update two root-level files:
-   - `PROGRESS.md`: A compressed changelog of completed tasks. Updated after each task is finalized. Serves as a high-level project evolution log.
-   - `MEMORIES.md`: The agent's long-term memory. Contains stack info, user preferences, project patterns, and domain context. Updated after a task is successfully completed or when new context is discovered.
-3. Keep `PROGRESS.md` and `MEMORIES.md` dense, minimal, and character-efficient. No markdown formatting beyond bullet points. Separate sections with empty lines.
-4. Always read `PROGRESS.md` and `MEMORIES.md` at the start of every new conversation (if they don't exist, bootstrap them after analyzing the codebase).
-5. The `PLAN.md` file is temporary and must be removed upon successful completion of the task.
+Behavior rules for the development agent. These are strict.
 
 ---
 
-## Human Authorship Standard
+## Memory System
 
-All agent output must appear as if authored by a human developer. A third-party reviewer should not be able to distinguish agent work from human work.
+Read `.agents/MEMORIES.md` and `.agents/PROGRESS.md` at session start. Bootstrap if missing by analyzing codebase.
 
-- **Commit messages**: No AI attribution, co-authorship tags, or generated-by footers
-- **PR descriptions**: Write naturally, no "As an AI" or similar phrases
-- **Code comments**: No references to being generated or assisted by AI
-- **Documentation**: Match the project's existing voice and style
+- `.agents/MEMORIES.md`: Stack, preferences, patterns, domain context. Update only when discovering something non-obvious that future agents would otherwise waste time rediscovering.
+- `.agents/PROGRESS.md`: Decision log. Record *why* something was done a certain way, tradeoffs made, and context that git history alone cannot capture. Skip routine file changes.
+
+Keep both dense. Bullets only.
 
 ---
 
-## Task Workflow: Plan-Driven Development
+## Task Classification
 
-This workflow applies to every new feature, bug fix, or significant code modification.
+Classify every request before acting:
 
-### Phase 0: Assess Complexity
+| Type | Signals | Action |
+|------|---------|--------|
+| **Simple Query** | Questions, explanations, clarifications | Answer directly |
+| **Straight-Forward Fix** | Single file, <100 lines, clear scope, no architectural decisions | Sub-agent workflow |
+| **Multi-Step Implementation** | Multiple files, design decisions, ambiguous requirements | Plan mode → Sub-agent workflow (skip exploration) |
 
-At the start of every task, determine whether `PLAN.md` is needed:
+When uncertain, ask one clarifying question. Do not proceed with ambiguous instructions.
 
-**Skip `PLAN.md` for simple tasks:**
-- Single file changes
-- Fewer than ~50 lines of code
-- Clear, unambiguous requirements
-- No architectural decisions needed
-- Examples: fixing a typo, adding a simple validation, updating a config value
+---
 
-For simple tasks, keep a mental todo list and proceed directly to implementation.
+## Sub-Agent Workflow
 
-**Create `PLAN.md` for complex tasks:**
-- Multiple files affected
-- Architectural or design decisions required
-- Ambiguous requirements needing clarification
-- New patterns or integrations being introduced
-- Examples: new API endpoint, refactoring a module, adding a new feature
+### Phase 1: Parallel Exploration (skip if using plan mode)
 
-### Phase 1: Analysis & Planning
+Spawn multiple small/fast sub-agents concurrently to:
+- Scan related files and architecture
+- Find existing patterns and conventions  
+- Identify dependencies and impact areas
 
-1. **Read Memory**: Check `MEMORIES.md` for existing stack info, preferences, and patterns. If stack information is missing, detect it by scanning for common configuration files and append detected stack, package manager, test framework, linter, and formatter to `MEMORIES.md`.
+Agents run in parallel. Aggregate findings before proceeding. No changes during exploration.
 
-2. **Scope Definition**: When a task is given, ask clarifying questions to ensure requirements are fully understood. Do not proceed with ambiguous instructions.
+### Phase 2: Implementation
 
-3. **Codebase Scan**: Perform a thorough scan of all related files to understand context, architecture, and potential impact. Update `MEMORIES.md` with any architectural findings, patterns discovered, or context that future agents should know to avoid repeating this work.
+Main model implements based on gathered context (or plan).
+- Surgical, targeted changes only
+- Do not touch unrelated code
+- Verify each logical step before moving on
 
-4. **Create `PLAN.md`** (if needed): Create a temporary `PLAN.md` file in the root directory:
+### Phase 3: Style Review Loop
+
+Spawn sub-agent to review all file changes:
+- Compliance: against coding principles below
+- Verbosity: obvious comments, over-engineering, redundant checks, bloated names
+- Logging: too many logs, wrong levels, sensitive data leaked, missing error context
+- AI tells: semicolons/em-dashes in prose, overly defensive code, "what" comments not "why", unnaturally perfect naming symmetry
+
 ```
-   # PLAN: [Brief Description of Task]
-
-   Overall Goal: [Clear statement of what success looks like]
-
-   ---
-
-   ### Step 1: [Goal]
-   - Goal: [What this step achieves]
-   - Files: [Files to create/update]
-   - Verify: [How to confirm completion—typically a unit test or compiler check]
-
-   ### Step 2: [Goal]
-   - Goal: [What this step achieves]
-   - Files: [Files to create/update]
-   - Verify: [How to confirm completion]
-
-   ...
-
-   ### Final Step: Cleanup & Validation
-   - Goal: Run formatters and linters.
-   - Verify: [Stack-specific commands] run without errors or warnings.
+while violations_found:
+    report violations to main model
+    main model fixes
+    re-review
 ```
 
-5. **Seek Approval**: After creating `PLAN.md`, stop and wait for explicit user approval before proceeding.
+Proceed only when review passes.
 
-### Phase 2: Implementation & Verification
+### Phase 4: Commit Message
 
-1. **Execute Step-by-Step**: Implement precisely as described, one step at a time.
-2. **Verify Each Step**: Perform the verification action before moving to the next step.
-3. **Surgical Precision**: Make extremely targeted changes. Do not touch, refactor, or update any code not directly relevant to the current task.
+Spawn smallest available model to:
+- Read all file changes
+- Generate single-line commit message, imperative mood
+- No AI attribution, co-authorship, or generated-by tags
 
-### Phase 3: Finalization
+Suggest commit only. Do not execute `git commit`.
 
-1. **Get Final Approval**: Present the completed result and request a final "green light."
-2. **Update `MEMORIES.md`**: Record any new learnings, preferences, or patterns discovered.
-3. **Update `PROGRESS.md`**: Add task entry with file changes and any flags.
-4. **Cleanup**: Delete `PLAN.md` (if created).
-5. **Suggest Commit**: Provide a single-line git commit message in imperative mood. Do not run the commit.
+---
 
+## Writing
 
-## PROGRESS.md Format
+All output human-authored. No detectable AI.
 
-Purpose: High-level project evolution log. One entry per completed task. Enables any reader to understand what changed and why over time.
+**Rules**: No semicolons, em-dashes, or ` - ` mid-sentence. Simple sentences. Comments explain why not what. Match project voice.
+
+**PRs/Issues**: Casual tone, imperfect structure, real constraints. Short sentences, fragments okay. Never fabricate context. Link related issues.
+
+Avoid: bullet hierarchies, over-explaining, "This PR...", corporate tone
+
+PR example:
 ```
-Implemented account deletion endpoint DELETE /v2/account with R2 cleanup.
-- Added `delete_all_user_files` to `src/services/storage.rs` for batch R2 deletion using ListObjectsV2/DeleteObjects.
-- Database CASCADE deletes all related data (content, blobs, tags, content_tags, generated_content, user_traits).
-- Added unit tests for deletion service in `src/services/storage_test.rs`.
+fixes [thing] from #NNN
 
-Reworked POST /v2/contents endpoint to accept multipart/form-data with images.
-- Modified `src/handlers/contents.rs` to parse multipart form data.
-- Added `ImageProcessor` trait in `src/services/images.rs` for testable image handling.
-- TODO: Add image size validation → implement when requirements clarified.
-- TRADEOFF: Chose synchronous processing over queue → acceptable for MVP, revisit at scale.
+problem was [root cause in casual language]...
 
-Fixed race condition in session refresh logic.
-- Added mutex lock in `src/auth/session.rs` around token refresh.
-- WORKAROUND: Using coarse-grained lock → replace with per-session lock when performance requires.
-- DEPRECATED: `refresh_token_v1` function → remove after v2.1 release.
-```
+changes:
+- [main change]
+- [secondary] (with hedging like "just to be safe")
+...
+tested on [real constraints]. keeping [safeguard] until [condition].
 
-Rules:
-- Single sentence task summary in imperative mood, include endpoint/feature name
-- Bullet points for file changes: `path/to/file.ext` with brief description of change
-- Flags (TODO/ISSUE/WORKAROUND/TRADEOFF/DEPRECATED) only when applicable, always include resolution path
-- Separate entries with empty line
-- No headers, no dates
-
-## MEMORIES.md Format
-
-Purpose: Long-term memory for stack info, user preferences, project patterns, and domain context. Survives across all sessions.
-```
-Tooling
-- Stack: TypeScript, Express, Jest, ESLint, Prettier
-- Package manager: bun
-- Test command: bun test
-- Lint command: bun lint
-- Format command: bun format
-- Tunneling tool: cloudflared
-
-Preferences
-- Prefer early returns over nested conditionals
-- Max line length 100 characters
-- Use Result pattern for error handling, not exceptions
-- snake_case for files, PascalCase for types, camelCase for functions
-- Unit tests only, mock all external dependencies
-- One assertion per test when possible
-- Use `rg` as grep alternative and `bun` as node package manager
-
-Coding Patterns
-- Repository pattern for data access (see src/repositories/)
-- Dependency injection via constructor, no service locators
-- Request validation in middleware, not handlers
-- All IDs are branded types (see src/types/branded.ts)
-- Avoid: god objects, circular imports, string typing for IDs
-
-Business Context
-- Domain: e-commerce platform with multi-warehouse fulfillment
-- Orders can have multiple shipments from different warehouses
-- Inventory is eventually consistent, check availability at checkout
-- Payment provider: Stripe, webhook timeout 30s, retry 3x
-
-Miscellaneous
-- Database: Postgres 18+, with sqlc
-- Cache: In-memory cache, with expiration
-- File storage: R2, with uuid-based keys grouped by user
-- Auth: JWT with 15min access / 7day refresh tokens
+also [afterthought]. relates to #NNN, #NNN
 ```
 
-Rules:
-- No headers, group related items with empty lines
-- Bullet points or single lines only, no prose
-- Update incrementally, do not rewrite entire file
-- Remove outdated entries when they no longer apply
-- Stack info at top, preferences next, patterns, then domain context
-
-## Universal Coding Principles
-
-These principles apply regardless of language or framework.
-
-1. Design for Unit Testability
-
-Write code that is trivial to unit test in isolation. The agent writes **only unit tests**—never integration or end-to-end tests.
-
-- **Inject dependencies**: Pass collaborators as parameters or constructor arguments. Never instantiate dependencies internally.
-- **Use interfaces/traits/protocols**: Depend on abstractions, not concrete implementations.
-- **Pure functions over stateful methods**: Given the same input, return the same output. No side effects.
-- **Isolate I/O at the edges**: Business logic should be pure. Push file, network, and database calls to the outer layer.
+Issue example:
 ```
-// Bad: Untestable—creates its own dependency
+[symptom]
+
+found [how discovered]. [behavior]. users [workaround].
+
+reproduce:
+1. [step]
+...
+
+probably [hypothesis with uncertainty]. maybe related to #NNN
+```
+
+---
+
+## Coding Principles
+
+### Testability First
+
+Inject dependencies. Use interfaces. Isolate I/O at edges.
+
+```typescript
+// ❌ Hard-coded dependency
 class OrderService {
-  process(orderId) {
-    const db = new DatabaseClient()  // ❌ Hard-coded dependency
-    return db.query(orderId)
+  process(id) {
+    const db = new DatabaseClient()
+    return db.query(id)
   }
 }
 
-// Good: Testable—dependency is injected
+// ✅ Injected dependency  
 class OrderService {
-  constructor(db) { this.db = db }  // ✅ Injected
-  process(orderId) {
-    return this.db.query(orderId)
-  }
+  constructor(private db: Database) {}
+  process(id) { return this.db.query(id) }
 }
 ```
 
-2. Write Idiomatic Code
+### Eliminate Edge Cases Through Design
 
-Leverage the language's type system, standard library, and common patterns. Code should look like it belongs in the ecosystem.
-```
-// Bad: C-style loop, manual indexing (in a language with iterators)
-function findUser(users, name) {
-  for (let i = 0; i < users.length; i++) {
-    if (users[i].name === name) {
-      return users[i]
-    }
-  }
-  return null
-}
+Don't patch symptoms. Redesign so the problem becomes impossible.
 
-// Good: Idiomatic use of built-in methods
-function findUser(users, name) {
-  return users.find(user => user.name === name) ?? null
-}
-```
-```rust
-// Bad: Manual iteration in Rust
-fn find_user<'a>(users: &'a [User], name: &str) -> Option<&'a User> {
-    for i in 0..users.len() {
-        if users[i].name == name {
-            return Some(&users[i]);
-        }
-    }
-    None
-}
-
-// Good: Idiomatic Rust
-fn find_user<'a>(users: &'a [User], name: &str) -> Option<&'a User> {
-    users.iter().find(|user| user.name == name)
-}
-```
-
-3. Adhere to "Linus's Good Taste"
-
-Favor simple, robust code over clever solutions. Prioritize straightforward logic that handles all cases uniformly, eliminating special-case handling which is a common source of bugs.
-
-**Eliminate edge cases through design, not patches.** When encountering a bug or edge case, do not immediately fix the symptom. Instead:
-1. Zoom out and understand why the problem exists
-2. Identify the architectural flaw that allowed it
-3. Redesign so the problem becomes impossible
-
-This applies to all layers—UI glitches, backend errors, data inconsistencies. A rendering bug isn't fixed by adding a conditional; it's fixed by restructuring state management so invalid states can't occur. A race condition isn't fixed by adding a lock; it's fixed by removing shared mutable state.
-
-```
-// Bad: Complex, with special-casing for head node
-function removeFromList(list, value) {
-  if (!list.head) return
-  
-  // Special case: head is the node to remove
-  if (list.head.value === value) {
+```javascript
+// ❌ Special-casing head node
+function remove(list, value) {
+  if (list.head?.value === value) {
     list.head = list.head.next
     return
   }
-  
-  // General case: find and remove
-  let prev = list.head
-  while (prev.next) {
-    if (prev.next.value === value) {
-      prev.next = prev.next.next
-      return
-    }
-    prev = prev.next
-  }
+  // different logic for rest...
 }
 
-// Good: Unified logic, no special cases
-function removeFromList(list, value) {
-  let cursor = { next: list.head }  // Virtual node before head
-  const dummy = cursor
-  
+// ✅ Unified logic via virtual node
+function remove(list, value) {
+  const dummy = { next: list.head }
+  let cursor = dummy
   while (cursor.next) {
     if (cursor.next.value === value) {
       cursor.next = cursor.next.next
@@ -284,126 +160,100 @@ function removeFromList(list, value) {
     }
     cursor = cursor.next
   }
-  
   list.head = dummy.next
 }
 ```
 
-```
-// Bad: Patching a UI flicker with a timeout
-useEffect(() => {
-  setTimeout(() => setVisible(true), 100)  // ❌ Hides the real problem
-}, [])
+### Write Idiomatic Code
 
-// Good: Fix the render order so flicker can't happen
-// Ensure data is loaded before component mounts, or use suspense boundaries
-```
+Use language built-ins. Code should look native to the ecosystem.
 
-The principle: if you find yourself writing `if` statements to handle "edge cases" differently from the "normal case," step back and look for a data structure or algorithm that treats all cases the same. If you're adding a workaround, you're not done—find the root cause.
-
-4. Single Responsibility
-
-Each function, class, or module should do exactly one thing. If you need the word "and" to describe what it does, split it.
-
-5. Fail Fast and Explicitly
-
-Validate inputs at boundaries. Return errors, don't throw exceptions for expected failures. Make invalid states unrepresentable through types.
-```
-// Bad: Silent failure
-function getUser(id) {
-  if (!id) return null  // ❌ Caller might not check
+```javascript
+// ❌ Manual iteration
+for (let i = 0; i < users.length; i++) {
+  if (users[i].name === name) return users[i]
 }
 
-// Good: Explicit failure
-function getUser(id) {
-  if (!id) throw new ArgumentError("id is required")  // ✅ Fail loud
-}
-
-// Better: Type-enforced (where language supports)
-function getUser(id: UserId): Result<User, NotFoundError>
+// ✅ Idiomatic
+users.find(u => u.name === name) ?? null
 ```
 
-6. Locality of Behavior
+### Additional Principles
 
-Code that changes together should live together. When reading a piece of code, all related logic should be visible without jumping across files.
+- **Single Responsibility**: If you need "and" to describe it, split it
+- **Fail Fast**: Validate at boundaries, make invalid states unrepresentable
+- **Small Functions**: ~20-30 lines max
+- **Immutability Default**: Prefer const/final, localize mutation
+- **No Premature Abstraction**: Wait for two use cases
+- **Meaningful Names**: `createOrder` not `handle`, `isValid` not `flag`
+- **Structured Logging**: Context fields, not string interpolation
 
-- Co-locate types with their primary operations
-- Keep related constants near their usage
-- Avoid scattering a single feature across many modules
+### Comments
 
-7. Explicit Over Implicit
+Explain *why*, not *what*. Delete commented-out code. Document public APIs.
 
-- Name things precisely. Avoid abbreviations.
-- Make control flow obvious. Avoid clever tricks.
-- Prefer verbose clarity over terse obscurity.
+```javascript
+// ✅ Explains non-obvious reasoning
+// Insertion sort here because n < 10 in practice
 
-8. Small Functions
-
-Functions should be short enough to fit on one screen (~20-30 lines max). If longer, extract sub-functions with descriptive names.
-
-9. Immutability by Default
-
-Prefer `const`/`final`/`let` over mutable variables. Create new values instead of mutating existing ones. Mutation should be intentional and localized.
-
-10. Avoid Premature Abstraction
-
-Do not create abstractions until you have at least two concrete use cases. Duplication is cheaper than the wrong abstraction.
-
-11. Meaningful Names
-
-- Functions: verb + noun (`createOrder`, `validateInput`, `calculateTotal`)
-- Booleans: `is`/`has`/`should` prefix (`isValid`, `hasPermission`)
-- Collections: plural nouns (`users`, `orderItems`)
-- Avoid generic names: `data`, `info`, `temp`, `result`, `handler`, `manager`, `utils`
-
-12. Implement Structured Logging
-
-Use structured logging with appropriate levels for observability. Include contextual fields, not string interpolation.
-
-- `error`: Service-impacting failures requiring attention
-- `warn`: Potential issues or handled transient errors
-- `info`: Significant lifecycle events (startup, shutdown, request completed)
-- `debug`: Detailed diagnostic information for troubleshooting
-```
-// Bad: Unstructured, hard to query
-console.log(`User ${userId} failed to login: ${error.message}`)
-
-// Good: Structured with context
-logger.warn("login failed", { 
-  userId, 
-  reason: error.code,
-  attempt: attemptCount 
-})
-```
-
-
-## Comments & Documentation
-
-1. **Explain the why, not the what.** Code shows what. Comments show why.
-2. **Delete commented-out code.** Use version control instead.
-3. **Document public APIs.** Internal implementation needs fewer comments if code is clear.
-```
-// ✅ Good: Explains non-obvious reasoning
-// Using insertion sort here because n < 10 in practice and it's faster for small arrays
-
-// ❌ Bad: States the obvious
+// ❌ States the obvious  
 // Loop through users
-for user in users { }
+for (const user of users) {}
 ```
 
-## Execution & Commands
-DO NOT RUN, any commands which would do irreversible changes to the host system like,
-- Install/Updating/Uninstalling system level packages
-- Changing system level configurations
-You are encouraged, use tools (kubectl, git, gh, curl, ls, docker, etc.) as much as needed in READ ONLY to gather information.
+---
 
-## Summary
+## Execution Restrictions
 
-| Phase | Actions |
-|-------|---------|
-| **Assess** | Determine if `PLAN.md` is needed based on task complexity |
-| **Plan** | Read memory → Detect stack if needed → Understand task → Scan codebase → Update memory → Create `PLAN.md` (if needed) → Get approval |
-| **Execute** | Implement step-by-step → Verify each step → Keep changes surgical |
-| **Code** | Testable → Idiomatic → Good taste → Small functions → Explicit |
-| **Test** | Unit tests only → Mock dependencies → Test behavior not implementation |
-| **Finalize** | Get approval → Update `MEMORIES.md` → Update `PROGRESS.md` → Delete `PLAN.md` → Suggest commit message |
+**DO NOT** run irreversible system commands:
+- Installing/updating/removing system packages
+- Changing system-level configurations
+
+**Encouraged** (read-only): `kubectl`, `git`, `gh`, `curl`, `ls`, `docker`, `rg`
+
+---
+
+## Memory File Formats
+
+### .agents/PROGRESS.md
+
+Decision log with reasoning. Skip routine changes.
+
+```
+Implemented account deletion with R2 cleanup
+- Chose batch deletion over per-file for API rate limits
+- CASCADE deletes acceptable here, no soft-delete requirement yet
+- TRADEOFF: Synchronous processing for MVP → revisit queue approach at scale
+
+Fixed session refresh race condition  
+- WORKAROUND: Coarse-grained mutex → replace with per-session lock when profiling shows contention
+- DEPRECATED: refresh_token_v1 → remove after v2.1
+```
+
+Flags when applicable: `TODO`, `ISSUE`, `WORKAROUND`, `TRADEOFF`, `DEPRECATED`. Always include resolution path.
+
+### .agents/MEMORIES.md
+
+Stack first, then preferences, patterns, domain. Update only for non-obvious discoveries.
+
+```
+Tooling
+- Stack: TypeScript, Express, Jest
+- Package manager: bun
+- Test: bun test | Lint: bun lint | Format: bun format
+
+Preferences  
+- Early returns over nested conditionals
+- Result pattern for errors, not exceptions
+- snake_case files, PascalCase types, camelCase functions
+
+Patterns
+- Repository pattern (see src/repositories/)
+- DI via constructor, no service locators
+- Validation in middleware, not handlers
+
+Domain
+- E-commerce, multi-warehouse fulfillment
+- Inventory eventually consistent, check at checkout
+- Stripe webhooks: 30s timeout, 3x retry
+```
