@@ -83,6 +83,7 @@
     # ─────────────────────────────────────────
     # Kubernetes & Cloud (Platform Engineering)
     # ─────────────────────────────────────────
+    awscli2
     kubectl
     kubernetes-helm
     k9s

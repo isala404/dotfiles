@@ -106,12 +106,10 @@
 
       # Development
       "visual-studio-code"
-      "cursor"
       "rancher" # Container management (Docker alternative)
       "postman"
       "dbeaver-community"
       "claude-code"
-      "zed"
 
       # Communication
       "discord"
