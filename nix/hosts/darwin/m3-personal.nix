@@ -1,6 +1,6 @@
 # M3 Personal Computer Configuration
 # Hostname: Isalas-M3-Pro
-# User: supiri
+# User: isala
 # Enhanced for platform engineering + personal use
 { pkgs, ... }:
 {
@@ -35,36 +35,19 @@
     # ─────────────────────────────────────────
     kubeseal # Sealed secrets
     sops # Secret encryption
-    age # Modern encryption
     cloudflared # Cloudflare tunnels
     nmap
-    mtr # Network diagnostics
-
     # ─────────────────────────────────────────
     # Build & Development Tools
     # ─────────────────────────────────────────
     cmake
     gnupg
-    swig
-    cocoapods # iOS development
-
-    # ─────────────────────────────────────────
-    # Document & Typesetting
-    # ─────────────────────────────────────────
-    tectonic # Modern LaTeX
-    typst # Modern typesetting
-    tesseract # OCR
-    pandoc # Document conversion
-
-    # ─────────────────────────────────────────
-    # File Management
-    # ─────────────────────────────────────────
-    yazi # Terminal file manager
-    imagemagick # Image manipulation
   ];
 
   environment.variables = {
-    PATH = "$HOME/.bun/bin:$HOME/.cargo/bin:$HOME/.lmstudio/bin:$HOME/.orbstack/bin:$PATH";
+    PATH = "$HOME/.bun/bin:$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/.orbstack/bin:$HOME/Library/Android/sdk/platform-tools:$HOME/Library/Android/sdk/emulator:$PATH";
+    ANDROID_HOME = "$HOME/Library/Android/sdk";
+    ANDROID_SDK_ROOT = "$HOME/Library/Android/sdk";
   };
 
   # =============================================
@@ -91,7 +74,9 @@
     fish_add_path ~/.cargo/bin
     fish_add_path /usr/local/bin
     fish_add_path ~/.orbstack/bin
-    fish_add_path ~/.lmstudio/bin
+    fish_add_path ~/.npm-global/bin
+    fish_add_path ~/Library/Android/sdk/platform-tools
+    fish_add_path ~/Library/Android/sdk/emulator
 
     # OrbStack shell init
     source ~/.orbstack/shell/init.fish 2>/dev/null; or true
@@ -115,6 +100,12 @@
     function kns
       kubens (kubens | fzf)
     end
+
+    # Sync system config
+    function sync
+      echo "Syncing nix-darwin config..."
+      sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m3-personal
+    end
   '';
 
   programs.zsh.interactiveShellInit = ''
@@ -125,11 +116,11 @@
     export PATH="$HOME/.bun/bin:$PATH"
     export PATH="$HOME/.cargo/bin:$PATH"
     export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
-    export PATH="$HOME/.lmstudio/bin:$PATH"
     export PATH="$HOME/.orbstack/bin:$PATH"
 
     source ~/.orbstack/shell/init.zsh 2>/dev/null || :
     [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+
   '';
 
   # =============================================
@@ -145,7 +136,6 @@
 
     brews = [
       "mas"
-      "llama.cpp"
       "gemini-cli"
       "opencode"
     ];
@@ -158,15 +148,14 @@
       "visual-studio-code"
       "cursor"
       "zed"
-      "alacritty"
-      "wezterm" # Alternative terminal
+      "ghostty"
       "dbeaver-community"
       "postman"
-      "orbstack" # Docker & Linux VMs
+      "orbstack"
       "claude-code"
-
-      # AI/ML
-      "lm-studio"
+      "android-studio"
+      "android-commandlinetools"
+      "temurin"
 
       # Communication
       "discord"
@@ -177,37 +166,100 @@
       "spotify"
       "vlc"
       "obs"
-      "iina" # Modern video player
-
       # Utilities
       "aldente"
       "macs-fan-control"
       "transmission"
       "google-drive"
-      "raycast" # Spotlight replacement
-
-      # Gaming & Emulation
-      "steam"
 
       # Network & Security
       "openvpn-connect"
       "tailscale"
-      "wireshark-app"
     ];
 
-    masApps = { };
+    masApps = {
+      Xcode = 497799835;
+    };
   };
 
   # =============================================
   # User Configuration
   # =============================================
-  users.users.supiri.shell = pkgs.fish;
+  users.users.isala.shell = pkgs.fish;
 
   system.activationScripts.extraActivation.text = ''
     softwareupdate --install-rosetta --agree-to-license
-    echo "Setting fish as default shell for supiri..." >&2
-    dscl . -create /Users/supiri UserShell /run/current-system/sw/bin/fish
+    echo "Setting fish as default shell for isala..." >&2
+    dscl . -create /Users/isala UserShell /run/current-system/sw/bin/fish
+
+    # Time Machine exclusions — skip reproducible/cacheable data
+    echo "Configuring Time Machine exclusions..." >&2
+    for dir in \
+      /nix \
+      /Users/isala/.cargo \
+      /Users/isala/.rustup \
+      /Users/isala/.npm-global \
+      /Users/isala/go \
+      /Users/isala/Library/Android/sdk \
+      /Users/isala/Library/Developer/Xcode/DerivedData \
+      /Users/isala/Library/Developer/CoreSimulator \
+      /Users/isala/Library/Caches \
+      /Users/isala/.cache \
+      /Users/isala/.gradle \
+      /Users/isala/.cocoapods \
+      /Users/isala/.pub-cache \
+    ; do
+      tmutil addexclusion -p "$dir" 2>/dev/null || true
+    done
+
+    # Exclude node_modules, build artifacts, venvs, and model caches
+    # Uses sticky exclusion on common paths
+    for pattern in \
+      node_modules \
+      .next \
+      target \
+      .venv \
+      venv \
+      __pycache__ \
+      .tox \
+      dist \
+      build \
+    ; do
+      find /Users/isala/Projects -maxdepth 4 -type d -name "$pattern" -exec tmutil addexclusion {} \; 2>/dev/null || true
+    done
+
+    # ML model caches
+    for dir in \
+      /Users/isala/.cache/huggingface \
+      /Users/isala/.cache/torch \
+      /Users/isala/.cache/pip \
+      /Users/isala/.cache/uv \
+      /Users/isala/.ollama \
+      /Users/isala/.lmstudio \
+    ; do
+      tmutil addexclusion -p "$dir" 2>/dev/null || true
+    done
   '';
 
-  system.primaryUser = "supiri";
+  # =============================================
+  # Weekly Nix Sync (Fridays at 11pm)
+  # =============================================
+  launchd.daemons.nix-weekly-sync = {
+    script = ''
+      export PATH="/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+      darwin-rebuild switch --flake /Users/isala/Projects/dotfiles/nix#m3-personal 2>&1 | logger -t nix-sync
+    '';
+    serviceConfig = {
+      StartCalendarInterval = [{
+        Weekday = 5;
+        Hour = 23;
+        Minute = 0;
+      }];
+      StandardOutPath = "/var/log/nix-sync.log";
+      StandardErrorPath = "/var/log/nix-sync.log";
+    };
+  };
+
+  system.primaryUser = "isala";
 }

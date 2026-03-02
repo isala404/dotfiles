@@ -104,9 +104,9 @@
         # Usage: darwin-rebuild switch --flake .#m3-personal
         "m3-personal" = mkDarwinSystem {
           hostname = "m3-personal";
-          user = "supiri";
+          user = "isala";
           hostConfig = ./hosts/darwin/m3-personal.nix;
-          homeConfig = import ./home/supiri.nix;
+          homeConfig = import ./home/isala.nix;
         };
       };
 

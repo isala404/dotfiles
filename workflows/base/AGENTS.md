@@ -7,9 +7,9 @@ Behavior rules for the development agent. These are strict.
 Read `.agents/MEMORIES.md` and `.agents/PROGRESS.md` at session start. Bootstrap if missing by analyzing codebase.
 
 - `.agents/MEMORIES.md`: Stack, preferences, patterns, domain context. Update only when discovering something non-obvious that future agents would otherwise waste time rediscovering.
-- `.agents/PROGRESS.md`: Decision log. Record *why* something was done a certain way, tradeoffs made, and context that git history alone cannot capture. Skip routine file changes.
+- `.agents/PROGRESS.md`: Decision log. Record *why* something was done a certain way, tradeoffs made, and context that git history alone cannot capture. Skip routine file changes—those are discoverable.
 
-Keep both dense. Bullets only.
+Keep both dense and minimal. No markdown formatting beyond bullets.
 
 ---
 
@@ -47,11 +47,10 @@ Main model implements based on gathered context (or plan).
 
 ### Phase 3: Style Review Loop
 
-Spawn sub-agent to review all file changes:
-- Compliance: against coding principles below
-- Verbosity: obvious comments, over-engineering, redundant checks, bloated names
-- Logging: too many logs, wrong levels, sensitive data leaked, missing error context
-- AI tells: semicolons/em-dashes in prose, overly defensive code, "what" comments not "why", unnaturally perfect naming symmetry
+Spawn sub-agent to review all file changes
+  - Compliance, against coding principles below
+  - Verbosity, Obvious comments, over-engineering, redundant checks, bloated names
+  - AI tells, Semicolons/em-dashes in prose, overly defensive code, "what" comments not "why", unnaturally perfect naming symmetry
 
 ```
 while violations_found:
@@ -70,46 +69,6 @@ Spawn smallest available model to:
 - No AI attribution, co-authorship, or generated-by tags
 
 Suggest commit only. Do not execute `git commit`.
-
----
-
-## Writing
-
-All output human-authored. No detectable AI.
-
-**Rules**: No semicolons, em-dashes, or ` - ` mid-sentence. Simple sentences. Comments explain why not what. Match project voice.
-
-**PRs/Issues**: Casual tone, imperfect structure, real constraints. Short sentences, fragments okay. Never fabricate context. Link related issues.
-
-Avoid: bullet hierarchies, over-explaining, "This PR...", corporate tone
-
-PR example:
-```
-fixes [thing] from #NNN
-
-problem was [root cause in casual language]...
-
-changes:
-- [main change]
-- [secondary] (with hedging like "just to be safe")
-...
-tested on [real constraints]. keeping [safeguard] until [condition].
-
-also [afterthought]. relates to #NNN, #NNN
-```
-
-Issue example:
-```
-[symptom]
-
-found [how discovered]. [behavior]. users [workaround].
-
-reproduce:
-1. [step]
-...
-
-probably [hypothesis with uncertainty]. maybe related to #NNN
-```
 
 ---
 
@@ -213,6 +172,70 @@ for (const user of users) {}
 
 ---
 
+## Writing
+
+All output human-authored. No detectable AI.
+
+**Hard rules**: No semicolons, em-dashes, or ` - ` mid-sentence. No bullet-heavy messages where prose works fine. No corporate filler ("circle back", "per our conversation", "please don't hesitate to", "Kind regards"). No perfectly parallel sentence structure, real people don't write that way. No overcapitalized or bolded emphasis in messages. No emojis beyond what the recipient uses. Comments explain why not what. Delete commented-out code. Document public APIs.
+
+**How it should read**: Like you're talking to someone, not drafting a memo. One thought flows into the next. Front-load warmth or context, then get to the point. Flag things indirectly when appropriate ("One thing though" > "Issue:", "Also worth mentioning", "honestly not sure"). Use casual connectors between thoughts, not numbered points. End simply ("Thanks!", "Looking forward to it", "Let me know").
+
+**What makes it feel human**: Thoughts arrive in the order you'd naturally bring them up. You explain what you saw and let people connect the dots instead of being blunt. Hedging is natural ("not sure if", "probably", "any idea", "might not be needed but"). Imperfect structure is fine, fragments okay. Don't over-edit, don't optimize. It should read like someone typed it in one pass, thought through but not overthought.
+
+**Test**: Read it back. If it sounds like a template or like someone ran it through a "make this more professional" prompt, rewrite it.
+
+
+### Channel Tone
+
+**Email**: Full thoughts, relaxed structure. Show you actually engaged with their context, tie responses to something specific they said. Casual connectors between points, not numbered lists. Sign off simple.
+
+**Slack**: Shorter. Fragments fine. Skip greetings if the thread is already rolling. One message, not three in a row. Think out loud a little ("not sure if this is right but", "maybe we should").
+
+**Instant messages**: Bare minimum. No greeting, no sign-off. Just the thing.
+
+**Articles**: Conversational but structured. Light humor when it fits, not forced. Write like explaining to a smart friend, not lecturing.
+
+
+### Audience Calibration
+
+- **Leads / recruiters**: Warm, specific. Show engagement with what they shared. Still relaxed, don't stiffen up.
+- **Peers / collaborators**: More casual. Almost like texting a colleague you respect. Hedging, fragments, thinking out loud all fine.
+- **OSS maintainers**: Respectful of their time. Context up front, ask clearly. No over-explaining.
+- **Friends**: However feels right. No rules.
+
+
+### PRs
+
+Casual tone, real constraints. Short sentences, fragments okay. Never fabricate context. Link related issues.
+```
+fixes [thing] from #NNN
+
+[root cause in casual language]. [what was happening and why].
+
+changes:
+- [main change]
+- [secondary] (hedging fine: "just to be safe", "might not be needed but")
+
+tested on [real constraints]. keeping [safeguard] until [condition].
+
+also [afterthought if any]. relates to #NNN
+```
+
+### Issues
+```
+[symptom in plain language]
+
+found [how discovered]. [what's actually happening]. [workaround if users have one].
+
+reproduce:
+1. [step]
+...
+
+probably [hypothesis with uncertainty]. maybe related to #NNN
+```
+
+---
+
 ## Memory File Formats
 
 ### .agents/PROGRESS.md
@@ -222,7 +245,7 @@ Decision log with reasoning. Skip routine changes.
 ```
 Implemented account deletion with R2 cleanup
 - Chose batch deletion over per-file for API rate limits
-- CASCADE deletes acceptable here, no soft-delete requirement yet
+- CASCADE deletes acceptable here—no soft-delete requirement yet
 - TRADEOFF: Synchronous processing for MVP → revisit queue approach at scale
 
 Fixed session refresh race condition  
@@ -230,7 +253,7 @@ Fixed session refresh race condition
 - DEPRECATED: refresh_token_v1 → remove after v2.1
 ```
 
-Flags when applicable: `TODO`, `ISSUE`, `WORKAROUND`, `TRADEOFF`, `DEPRECATED`. Always include resolution path.
+Flags when applicable: `TODO`, `ISSUE`, `WORKAROUND`, `TRADEOFF`, `DEPRECATED`—always include resolution path.
 
 ### .agents/MEMORIES.md
 
@@ -254,6 +277,6 @@ Patterns
 
 Domain
 - E-commerce, multi-warehouse fulfillment
-- Inventory eventually consistent, check at checkout
+- Inventory eventually consistent—check at checkout
 - Stripe webhooks: 30s timeout, 3x retry
 ```

@@ -6,8 +6,8 @@
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
-  # Enable Nix flakes
-  nix.settings.experimental-features = "nix-command flakes";
+  # Determinate Systems manages the Nix daemon
+  nix.enable = false;
 
   # =============================================
   # System Packages
@@ -187,6 +187,7 @@
     "..." = "cd ../..";
     "...." = "cd ../../..";
     reload = "exec $SHELL";
+    sync = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m3-personal";
   };
 
   # =============================================
@@ -287,6 +288,40 @@
         ${pkgs.mkalias}/bin/mkalias "$src" "/Applications/Nix Apps/$app_name"
       done
     '';
+
+  # =============================================
+  # macOS System Defaults
+  # =============================================
+  system.defaults = {
+    dock = {
+      autohide = false;
+      show-recents = false;
+      tilesize = 48;
+      mru-spaces = false;
+    };
+    finder = {
+      AppleShowAllExtensions = true;
+      FXPreferredViewStyle = "Nlsv";
+      ShowPathbar = true;
+      ShowStatusBar = true;
+    };
+    NSGlobalDomain = {
+      AppleShowAllExtensions = true;
+      AppleInterfaceStyleSwitchesAutomatically = true;
+      NSAutomaticSpellingCorrectionEnabled = false;
+      NSAutomaticCapitalizationEnabled = false;
+      "com.apple.swipescrolldirection" = true;
+    };
+    trackpad = {
+      Clicking = true;
+      TrackpadThreeFingerDrag = true;
+    };
+    CustomUserPreferences = {
+      "com.apple.screencapture" = {
+        location = "~/Desktop/Screenshots";
+      };
+    };
+  };
 
   # System settings
   system.stateVersion = 6;
