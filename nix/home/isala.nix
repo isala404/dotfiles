@@ -26,7 +26,7 @@
     cursor-style = block
     cursor-style-blink = true
 
-    scrollback-limit = 10000
+    scrollback-limit = 0
 
     copy-on-select = clipboard
 

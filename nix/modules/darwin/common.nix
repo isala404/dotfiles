@@ -118,6 +118,8 @@
     clang
     clang-tools
     gnumake
+    libiconv
+    apple-sdk_15
 
     # ─────────────────────────────────────────
     # Shell & Terminal
@@ -295,7 +297,7 @@
   system.defaults = {
     dock = {
       autohide = false;
-      show-recents = false;
+      show-recents = true;
       tilesize = 48;
       mru-spaces = false;
     };
@@ -307,18 +309,27 @@
     };
     NSGlobalDomain = {
       AppleShowAllExtensions = true;
-      AppleInterfaceStyleSwitchesAutomatically = true;
+      AppleInterfaceStyle = "Dark";
+      AppleInterfaceStyleSwitchesAutomatically = false;
       NSAutomaticSpellingCorrectionEnabled = false;
       NSAutomaticCapitalizationEnabled = false;
       "com.apple.swipescrolldirection" = true;
     };
     trackpad = {
       Clicking = true;
-      TrackpadThreeFingerDrag = true;
+      TrackpadThreeFingerDrag = false;
     };
     CustomUserPreferences = {
       "com.apple.screencapture" = {
         location = "~/Desktop/Screenshots";
+      };
+      "com.apple.AppleMultitouchTrackpad" = {
+        TrackpadThreeFingerVertSwipeGesture = 2;
+        TrackpadThreeFingerHorizSwipeGesture = 2;
+      };
+      "com.apple.driver.AppleBluetoothMultitouch.trackpad" = {
+        TrackpadThreeFingerVertSwipeGesture = 2;
+        TrackpadThreeFingerHorizSwipeGesture = 2;
       };
     };
   };

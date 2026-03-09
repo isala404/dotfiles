@@ -13,11 +13,11 @@
   xdg.configFile."zed/settings.json".text = builtins.toJSON {
     # Theme & Appearance
     theme = {
-      mode = "system";
+      mode = "dark";
       light = "One Light";
       dark = "One Dark Pro";
     };
-    icon_theme = "Catppuccin Latte";
+    icon_theme = "Catppuccin Mocha";
 
     # Fonts
     ui_font_size = 15;
@@ -212,7 +212,7 @@
         "editor.formatOnSave": true,
         "editor.minimap.enabled": false,
         "workbench.colorTheme": "One Dark Pro",
-        "workbench.iconTheme": "catppuccin-latte",
+        "workbench.iconTheme": "catppuccin-mocha",
         "files.trimTrailingWhitespace": true,
         "files.insertFinalNewline": true
       }' "$settings_file" > "$settings_file.tmp" && mv "$settings_file.tmp" "$settings_file"

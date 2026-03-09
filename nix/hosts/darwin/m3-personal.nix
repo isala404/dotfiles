@@ -35,6 +35,7 @@
     # ─────────────────────────────────────────
     kubeseal # Sealed secrets
     sops # Secret encryption
+    git-crypt # Transparent file encryption in git
     cloudflared # Cloudflare tunnels
     nmap
     # ─────────────────────────────────────────
@@ -48,6 +49,7 @@
     PATH = "$HOME/.bun/bin:$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/.orbstack/bin:$HOME/Library/Android/sdk/platform-tools:$HOME/Library/Android/sdk/emulator:$PATH";
     ANDROID_HOME = "$HOME/Library/Android/sdk";
     ANDROID_SDK_ROOT = "$HOME/Library/Android/sdk";
+    LIBRARY_PATH = "${pkgs.libiconv}/lib";
   };
 
   # =============================================
@@ -153,6 +155,8 @@
       "postman"
       "orbstack"
       "claude-code"
+      "codex"
+      "t3-code"
       "android-studio"
       "android-commandlinetools"
       "temurin"
