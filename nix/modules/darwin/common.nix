@@ -115,8 +115,6 @@
     # ─────────────────────────────────────────
     # Build tools
     # ─────────────────────────────────────────
-    clang
-    clang-tools
     gnumake
     libiconv
     apple-sdk_15

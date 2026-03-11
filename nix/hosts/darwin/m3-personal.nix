@@ -49,7 +49,6 @@
     PATH = "$HOME/.bun/bin:$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/.orbstack/bin:$HOME/Library/Android/sdk/platform-tools:$HOME/Library/Android/sdk/emulator:$PATH";
     ANDROID_HOME = "$HOME/Library/Android/sdk";
     ANDROID_SDK_ROOT = "$HOME/Library/Android/sdk";
-    LIBRARY_PATH = "${pkgs.libiconv}/lib";
   };
 
   # =============================================
@@ -70,6 +69,9 @@
     function fish_should_add_to_history
       test (string length -- $argv) -le 500
     end
+
+    # libiconv for native (non-cross) Rust/C builds
+    set -gx LIBRARY_PATH "${pkgs.libiconv}/lib"
 
     # Paths
     fish_add_path ~/.bun/bin
@@ -115,6 +117,9 @@
     eval "$(zoxide init zsh)"
     eval "$(direnv hook zsh)"
 
+    # libiconv for native (non-cross) Rust/C builds
+    export LIBRARY_PATH="${pkgs.libiconv}/lib"
+
     export PATH="$HOME/.bun/bin:$PATH"
     export PATH="$HOME/.cargo/bin:$PATH"
     export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
@@ -140,6 +145,7 @@
       "mas"
       "gemini-cli"
       "opencode"
+      "llvm"         # clang/clang-tools without Nix's cc-wrapper
     ];
 
     casks = [
