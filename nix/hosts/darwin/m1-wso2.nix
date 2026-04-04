@@ -41,6 +41,11 @@
     k3d # Local k8s clusters
 
     # ─────────────────────────────────────────
+    # Security Tools
+    # ─────────────────────────────────────────
+    bws # Bitwarden Secrets Manager CLI
+
+    # ─────────────────────────────────────────
     # Testing & Performance
     # ─────────────────────────────────────────
     k6 # Load testing
@@ -118,6 +123,9 @@
 
       # Work
       "workspace-one-intelligent-hub"
+
+      # Security
+      "bitwarden"
 
       # Utilities
       "vlc"

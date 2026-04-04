@@ -36,6 +36,7 @@
     kubeseal # Sealed secrets
     sops # Secret encryption
     git-crypt # Transparent file encryption in git
+    bws # Bitwarden Secrets Manager CLI
     cloudflared # Cloudflare tunnels
     nmap
     # ─────────────────────────────────────────
@@ -183,6 +184,7 @@
       "google-drive"
 
       # Network & Security
+      "bitwarden"
       "openvpn-connect"
       "tailscale"
     ];
