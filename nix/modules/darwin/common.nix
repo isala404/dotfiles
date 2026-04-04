@@ -140,7 +140,7 @@
     EDITOR = "vim";
     # Use bat for man pages with syntax highlighting
     MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-    # Nix clang can't find macOS SDK system libraries (libresolv, Security.framework, etc.)
+# Nix clang can't find macOS SDK system libraries (libresolv, Security.framework, etc.)
     CGO_LDFLAGS = "-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib";
   };
 

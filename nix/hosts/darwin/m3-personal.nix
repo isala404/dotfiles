@@ -75,6 +75,7 @@
     set -gx LIBRARY_PATH "${pkgs.libiconv}/lib"
 
     # Paths
+    fish_add_path ~/.local/bin
     fish_add_path ~/.bun/bin
     fish_add_path ~/.cargo/bin
     fish_add_path /usr/local/bin
@@ -104,6 +105,12 @@
     # Quick kubernetes namespace switch
     function kns
       kubens (kubens | fzf)
+    end
+
+    # BWS wrapper: fetch token from keychain with Touch ID gate
+    function bws
+      set -lx BWS_ACCESS_TOKEN (~/.local/bin/keychain-bio get bws-access-token)
+      command bws $argv
     end
 
     # Sync system config
@@ -202,6 +209,17 @@
     softwareupdate --install-rosetta --agree-to-license
     echo "Setting fish as default shell for isala..." >&2
     dscl . -create /Users/isala UserShell /run/current-system/sw/bin/fish
+
+    # Compile and install keychain-bio (Touch ID gated keychain access)
+    echo "Building keychain-bio..." >&2
+    mkdir -p /Users/isala/.local/bin
+    DOTFILES="/Users/isala/Projects/dotfiles"
+    swiftc -O -o /Users/isala/.local/bin/keychain-bio "$DOTFILES/bin/keychain-bio.swift" \
+      -framework Security -framework LocalAuthentication 2>&1 | logger -t keychain-bio || true
+
+    # Install BWS credential helpers
+    install -m 755 "$DOTFILES/bin/bws/aws-credential-helper.sh" /Users/isala/.aws/bws-credential-helper.sh 2>/dev/null || true
+    install -m 755 "$DOTFILES/bin/bws/kube-credential-helper.sh" /Users/isala/.kube/bws-credential-helper.sh 2>/dev/null || true
 
     # Time Machine exclusions — skip reproducible/cacheable data
     echo "Configuring Time Machine exclusions..." >&2
