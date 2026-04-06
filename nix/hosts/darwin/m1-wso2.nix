@@ -49,7 +49,6 @@
     # Testing & Performance
     # ─────────────────────────────────────────
     k6 # Load testing
-    vegeta # HTTP load testing
   ];
 
   environment.variables = {
@@ -83,6 +82,7 @@
     function kubectl
       command kubecolor $argv
     end
+
   '';
 
   # =============================================
@@ -115,6 +115,7 @@
       "postman"
       "dbeaver-community"
       "claude-code"
+      "codex" # OpenAI coding agent
 
       # Communication
       "discord"
@@ -126,6 +127,9 @@
 
       # Security
       "bitwarden"
+
+      # AWS
+      "session-manager-plugin"
 
       # Utilities
       "vlc"

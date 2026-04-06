@@ -140,6 +140,8 @@
     EDITOR = "vim";
     # Use bat for man pages with syntax highlighting
     MANPAGER = "sh -c 'col -bx | bat -l man -p'";
+    # Nix clang can't find macOS SDK system libraries (libresolv, Security.framework, etc.)
+    CGO_LDFLAGS = "-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib";
   };
 
   # =============================================
@@ -187,7 +189,8 @@
     "..." = "cd ../..";
     "...." = "cd ../../..";
     reload = "exec $SHELL";
-    sync = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m3-personal";
+    sync-m1 = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m1-wso2";
+    sync-m3 = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m3-personal";
   };
 
   # =============================================

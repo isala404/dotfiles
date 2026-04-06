@@ -123,7 +123,6 @@
 
     export PATH="$HOME/.bun/bin:$PATH"
     export PATH="$HOME/.cargo/bin:$PATH"
-    export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
     export PATH="$HOME/.orbstack/bin:$PATH"
 
     source ~/.orbstack/shell/init.zsh 2>/dev/null || :
