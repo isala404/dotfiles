@@ -16,6 +16,7 @@
     # Cloud & Infrastructure
     # ─────────────────────────────────────────
     awscli2
+    google-cloud-sdk
     eksctl # EKS management
     terraform
     opentofu # Open-source Terraform
@@ -44,6 +45,7 @@
     # ─────────────────────────────────────────
     cmake
     gnupg
+    imagemagick
   ];
 
   environment.variables = {
@@ -192,7 +194,7 @@
       # Network & Security
       "bitwarden"
       "openvpn-connect"
-      "tailscale"
+      "tailscale-app"
     ];
 
     masApps = {
