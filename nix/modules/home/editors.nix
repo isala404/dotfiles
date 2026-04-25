@@ -196,6 +196,12 @@
         "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6"
       },
       "model": "claude-opus-4-7",
+      "enabledPlugins": {
+        "rust-analyzer-lsp@claude-plugins-official": true,
+        "gopls-lsp@claude-plugins-official": true,
+        "clangd-lsp@claude-plugins-official": true
+      },
+      "autoMemoryEnabled": false,
       "skipDangerousModePermissionPrompt": true
     }' "$settings_file" > "$settings_file.tmp" && mv "$settings_file.tmp" "$settings_file"
   '';
