@@ -15,7 +15,6 @@
     # ─────────────────────────────────────────
     # Cloud & Infrastructure
     # ─────────────────────────────────────────
-    awscli2
     google-cloud-sdk
     eksctl # EKS management
     terraform
@@ -28,8 +27,6 @@
     # GitOps & CD
     # ─────────────────────────────────────────
     flux # GitOps toolkit
-    argocd # GitOps CD
-    kustomize # (already in common, but explicit here)
 
     # ─────────────────────────────────────────
     # Security Tools
@@ -37,9 +34,9 @@
     kubeseal # Sealed secrets
     sops # Secret encryption
     git-crypt # Transparent file encryption in git
-    bws # Bitwarden Secrets Manager CLI
     cloudflared # Cloudflare tunnels
     nmap
+
     # ─────────────────────────────────────────
     # Build & Development Tools
     # ─────────────────────────────────────────
@@ -49,7 +46,7 @@
   ];
 
   environment.variables = {
-    PATH = "$HOME/.bun/bin:$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/.orbstack/bin:$HOME/Library/Android/sdk/platform-tools:$HOME/Library/Android/sdk/emulator:$PATH";
+    PATH = "$HOME/.cargo/bin:$HOME/.npm-global/bin:$HOME/.orbstack/bin:$HOME/Library/Android/sdk/platform-tools:$HOME/Library/Android/sdk/emulator:$PATH";
     ANDROID_HOME = "$HOME/Library/Android/sdk";
     ANDROID_SDK_ROOT = "$HOME/Library/Android/sdk";
   };
@@ -58,27 +55,11 @@
   # Fish Shell - Personal paths and tools
   # =============================================
   programs.fish.interactiveShellInit = ''
-    set fish_greeting
-    starship init fish | source
-    zoxide init fish | source
-    direnv hook fish | source
-
-    # FZF configuration
-    set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git'
-    set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
-    set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --follow --exclude .git'
-    set -gx FZF_DEFAULT_OPTS '--height 40% --layout=reverse --border --preview "bat --style=numbers --color=always --line-range :500 {}"'
-
-    function fish_should_add_to_history
-      test (string length -- $argv) -le 500
-    end
-
     # libiconv for native (non-cross) Rust/C builds
     set -gx LIBRARY_PATH "${pkgs.libiconv}/lib"
 
     # Paths
     fish_add_path ~/.local/bin
-    fish_add_path ~/.bun/bin
     fish_add_path ~/.cargo/bin
     fish_add_path /usr/local/bin
     fish_add_path ~/.orbstack/bin
@@ -88,11 +69,6 @@
 
     # OrbStack shell init
     source ~/.orbstack/shell/init.fish 2>/dev/null; or true
-
-    # Use kubecolor for kubectl output
-    function kubectl
-      command kubecolor $argv
-    end
 
     # Quick project navigation
     function proj
@@ -123,10 +99,6 @@
   '';
 
   programs.zsh.interactiveShellInit = ''
-    eval "$(starship init zsh)"
-    eval "$(zoxide init zsh)"
-    eval "$(direnv hook zsh)"
-
     # libiconv for native (non-cross) Rust/C builds
     export LIBRARY_PATH="${pkgs.libiconv}/lib"
 
@@ -136,55 +108,30 @@
 
     source ~/.orbstack/shell/init.zsh 2>/dev/null || :
     [ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
-
   '';
 
   # =============================================
-  # Homebrew - Personal Applications
+  # Homebrew - Personal-only additions
   # =============================================
   homebrew = {
-    enable = true;
-    onActivation = {
-      autoUpdate = true;
-      upgrade = true;
-      cleanup = "zap";
-    };
-
     brews = [
-      "mas"
-      "gemini-cli"
-      "opencode"
-      "llvm"         # clang/clang-tools without Nix's cc-wrapper
+      "llvm" # clang/clang-tools without Nix's cc-wrapper
     ];
 
     casks = [
-      # Browsers
-      "google-chrome"
-
       # Development
-      "visual-studio-code"
       "cursor"
       "zed"
       "ghostty"
-      "dbeaver-community"
-      "postman"
       "orbstack"
-      "claude-code"
-      "codex"
       "t3-code"
       "android-studio"
       "android-commandlinetools"
       "temurin"
 
       # Communication
-      "discord"
-      "slack"
       "whatsapp"
 
-      # Media
-      "spotify"
-      "vlc"
-      "obs"
       # Utilities
       "aldente"
       "macs-fan-control"
@@ -192,7 +139,6 @@
       "google-drive"
 
       # Network & Security
-      "bitwarden"
       "openvpn-connect"
       "tailscale-app"
     ];
@@ -203,15 +149,9 @@
   };
 
   # =============================================
-  # User Configuration
+  # M3-specific activation (keychain-bio, credential helpers, Time Machine)
   # =============================================
-  users.users.isala.shell = pkgs.fish;
-
   system.activationScripts.extraActivation.text = ''
-    softwareupdate --install-rosetta --agree-to-license
-    echo "Setting fish as default shell for isala..." >&2
-    dscl . -create /Users/isala UserShell /run/current-system/sw/bin/fish
-
     # Compile and install keychain-bio (Touch ID gated keychain access)
     echo "Building keychain-bio..." >&2
     mkdir -p /Users/isala/.local/bin
@@ -291,6 +231,4 @@
       StandardErrorPath = "/var/log/nix-sync.log";
     };
   };
-
-  system.primaryUser = "isala";
 }

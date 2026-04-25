@@ -174,6 +174,32 @@
     };
   };
 
+  # =============================================
+  # Claude Code Configuration
+  # =============================================
+  home.activation.claudeSettings = config.lib.dag.entryAfter [ "writeBoundary" ] ''
+    settings_file="$HOME/.claude/settings.json"
+    mkdir -p "$HOME/.claude"
+
+    if [ -L "$settings_file" ]; then
+      rm "$settings_file"
+    fi
+
+    if [ ! -f "$settings_file" ]; then
+      echo '{}' > "$settings_file"
+    fi
+
+    ${pkgs.jq}/bin/jq '. * {
+      "env": {
+        "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
+        "CLAUDE_CODE_NO_FLICKER": 1,
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6"
+      },
+      "model": "claude-opus-4-7",
+      "skipDangerousModePermissionPrompt": true
+    }' "$settings_file" > "$settings_file.tmp" && mv "$settings_file.tmp" "$settings_file"
+  '';
+
   # Zed extensions to install (run `zed extensions` to manage)
   # Note: Zed installs extensions via the UI, but here's the recommended list:
   # - terraform, dockerfile, nix, ansible, toml, yaml

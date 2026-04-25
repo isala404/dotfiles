@@ -73,8 +73,8 @@
     # ─────────────────────────────────────────
     # Language Servers & Formatters (for editors)
     # ─────────────────────────────────────────
-    nodePackages.prettier # JS/TS/JSON/YAML formatter
-    nodePackages.typescript-language-server
+    prettier # JS/TS/JSON/YAML formatter
+    typescript-language-server
     yaml-language-server # YAML LSP with Kubernetes schema support
     terraform-ls # Terraform LSP
     nil # Nix LSP
@@ -95,6 +95,7 @@
     kubeconform # kubernetes manifest validation
     kube-linter # kubernetes yaml linter
     popeye # kubernetes cluster sanitizer
+    argocd # GitOps CD
 
     # ─────────────────────────────────────────
     # Security & Scanning
@@ -105,6 +106,7 @@
     grype # vulnerability scanner
     cosign # container signing
     dive # explore docker image layers
+    bws # Bitwarden Secrets Manager CLI
 
     # ─────────────────────────────────────────
     # Media
@@ -126,7 +128,7 @@
     fish
     tmux
     zellij # modern terminal multiplexer
-    direnv # per-directory environment variables
+    (direnv.overrideAttrs (_: { doCheck = false; })) # per-directory environment variables; test suite hangs on aarch64-darwin
     nix-direnv # fast direnv nix integration
 
     # ─────────────────────────────────────────
@@ -140,7 +142,7 @@
     EDITOR = "vim";
     # Use bat for man pages with syntax highlighting
     MANPAGER = "sh -c 'col -bx | bat -l man -p'";
-# Nix clang can't find macOS SDK system libraries (libresolv, Security.framework, etc.)
+    # Nix clang can't find macOS SDK system libraries (libresolv, Security.framework, etc.)
     CGO_LDFLAGS = "-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib";
   };
 
@@ -149,10 +151,11 @@
   # =============================================
   environment.shellAliases = {
     # Modern CLI replacements
+    # cat is left as the system default on purpose — bat's formatted output
+    # breaks copy/paste of file contents. Use `bat` explicitly when you want it.
     ls = "eza --icons --group-directories-first";
     ll = "eza -la --icons --group-directories-first --git";
     lt = "eza -la --icons --tree --level=2";
-    cat = "bat --paging=never";
     grep = "rg";
     find = "fd";
     du = "dust";
@@ -226,6 +229,14 @@
       function help
         $argv --help 2>&1 | bat --plain --language=help
       end
+
+      # Use kubecolor for kubectl output
+      function kubectl
+        command kubecolor $argv
+      end
+
+      # Bun on PATH everywhere
+      fish_add_path ~/.bun/bin
     '';
   };
 
@@ -291,6 +302,61 @@
         ${pkgs.mkalias}/bin/mkalias "$src" "/Applications/Nix Apps/$app_name"
       done
     '';
+
+  # =============================================
+  # Homebrew (shared across all machines)
+  # =============================================
+  homebrew = {
+    enable = true;
+    onActivation = {
+      autoUpdate = true;
+      upgrade = true;
+      cleanup = "zap";
+    };
+
+    brews = [
+      "mas" # Mac App Store CLI
+      "gemini-cli" # Google Gemini
+      "opencode" # AI coding assistant
+    ];
+
+    casks = [
+      # Browsers
+      "google-chrome"
+
+      # Development
+      "visual-studio-code"
+      "dbeaver-community"
+      "postman"
+      "claude"
+      "claude-code"
+      "codex" # OpenAI coding agent
+
+      # Communication
+      "discord"
+      "slack"
+      "spotify"
+
+      # Media
+      "vlc"
+      "obs"
+
+      # Security
+      "bitwarden"
+    ];
+  };
+
+  # =============================================
+  # User Configuration (shared)
+  # =============================================
+  users.users.isala.shell = pkgs.fish;
+  system.primaryUser = "isala";
+
+  system.activationScripts.extraActivation.text = ''
+    softwareupdate --install-rosetta --agree-to-license
+    echo "Setting fish as default shell for isala..." >&2
+    dscl . -create /Users/isala UserShell /run/current-system/sw/bin/fish
+  '';
 
   # =============================================
   # macOS System Defaults

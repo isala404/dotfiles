@@ -8,6 +8,14 @@
     nix-darwin.url = "github:LnL7/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    # Pin Homebrew to 4.6.x. Homebrew 5.0 dropped Library/Homebrew/brew.sh
+    # in favour of a pure-Ruby bootstrap, but nix-homebrew's wrapper still
+    # execs brew.sh, so activation fails on the "Homebrew bundle" step.
+    brew-src = {
+      url = "github:Homebrew/brew/4.6.19";
+      flake = false;
+    };
+    nix-homebrew.inputs.brew-src.follows = "brew-src";
 
     # Home Manager
     home-manager.url = "github:nix-community/home-manager/master";
@@ -21,6 +29,7 @@
       nix-darwin,
       nix-homebrew,
       home-manager,
+      ...
     }:
     let
       # =============================================

@@ -30,7 +30,6 @@
     # ─────────────────────────────────────────
     # GitOps & CD
     # ─────────────────────────────────────────
-    argocd # GitOps CD
     fluxcd # Alternative GitOps
 
     # ─────────────────────────────────────────
@@ -41,115 +40,49 @@
     k3d # Local k8s clusters
 
     # ─────────────────────────────────────────
-    # Security Tools
-    # ─────────────────────────────────────────
-    bws # Bitwarden Secrets Manager CLI
-
-    # ─────────────────────────────────────────
     # Testing & Performance
     # ─────────────────────────────────────────
     k6 # Load testing
   ];
 
   environment.variables = {
-    PATH = "$HOME/.rd/bin:$HOME/.bun/bin:$PATH";
+    PATH = "$HOME/.rd/bin:$PATH";
   };
 
   # =============================================
   # Fish Shell - Work-specific paths
   # =============================================
   programs.fish.interactiveShellInit = ''
-    set fish_greeting
-    starship init fish | source
-    zoxide init fish | source
-    direnv hook fish | source
-
-    # FZF configuration
-    set -gx FZF_DEFAULT_COMMAND 'fd --type f --hidden --follow --exclude .git'
-    set -gx FZF_CTRL_T_COMMAND "$FZF_DEFAULT_COMMAND"
-    set -gx FZF_ALT_C_COMMAND 'fd --type d --hidden --follow --exclude .git'
-    set -gx FZF_DEFAULT_OPTS '--height 40% --layout=reverse --border'
-
-    function fish_should_add_to_history
-      test (string length -- $argv) -le 500
-    end
-
-    # Rancher Desktop
+    # Rancher Desktop on PATH
     fish_add_path ~/.rd/bin
-    fish_add_path ~/.bun/bin
-
-    # Use kubecolor for kubectl output
-    function kubectl
-      command kubecolor $argv
-    end
-
   '';
 
   # =============================================
-  # Homebrew - Work Applications
+  # Homebrew - Work-only additions
   # =============================================
   homebrew = {
-    enable = true;
-    onActivation = {
-      autoUpdate = true;
-      upgrade = true;
-      cleanup = "zap";
-    };
-
     brews = [
-      "mas" # Mac App Store CLI
       "jmeter" # Performance testing
       "llama.cpp" # Local LLM inference
-      "gemini-cli" # Google Gemini
-      "opencode" # AI coding assistant
     ];
 
     casks = [
       # Browsers
-      "google-chrome"
       "brave-browser"
 
       # Development
-      "visual-studio-code"
       "rancher" # Container management (Docker alternative)
-      "postman"
-      "dbeaver-community"
-      "claude-code"
-      "codex" # OpenAI coding agent
-
-      # Communication
-      "discord"
-      "spotify"
-      "slack"
 
       # Work
       "workspace-one-intelligent-hub"
-
-      # Security
-      "bitwarden"
 
       # AWS
       "session-manager-plugin"
 
       # Utilities
-      "vlc"
-      "obs"
       "wireshark-app" # Network analysis
     ];
 
     masApps = { };
   };
-
-  # =============================================
-  # User Configuration
-  # =============================================
-  users.users.isala.shell = pkgs.fish;
-
-  system.activationScripts.extraActivation.text = ''
-    softwareupdate --install-rosetta --agree-to-license
-    echo "Setting fish as default shell for isala..." >&2
-    dscl . -create /Users/isala UserShell /run/current-system/sw/bin/fish
-  '';
-
-  system.primaryUser = "isala";
 }
