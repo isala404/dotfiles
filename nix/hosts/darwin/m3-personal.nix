@@ -94,7 +94,7 @@
     # Sync system config
     function sync
       echo "Syncing nix-darwin config..."
-      sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m3-personal
+      sudo darwin-rebuild switch --flake ~/Projects/infra/dotfiles/nix#m3-personal
     end
   '';
 
@@ -113,6 +113,10 @@
   # =============================================
   # Homebrew - Personal-only additions
   # =============================================
+  nix-homebrew.enableBashIntegration = false;
+  nix-homebrew.enableFishIntegration = false;
+  nix-homebrew.enableZshIntegration = false;
+
   homebrew = {
     brews = [
       "llvm" # clang/clang-tools without Nix's cc-wrapper
@@ -143,9 +147,7 @@
       "tailscale-app"
     ];
 
-    masApps = {
-      Xcode = 497799835;
-    };
+    masApps = { };
   };
 
   # =============================================
@@ -155,7 +157,7 @@
     # Compile and install keychain-bio (Touch ID gated keychain access)
     echo "Building keychain-bio..." >&2
     mkdir -p /Users/isala/.local/bin
-    DOTFILES="/Users/isala/Projects/dotfiles"
+    DOTFILES="/Users/isala/Projects/infra/dotfiles"
     swiftc -O -o /Users/isala/.local/bin/keychain-bio "$DOTFILES/bin/keychain-bio.swift" \
       -framework Security -framework LocalAuthentication 2>&1 | logger -t keychain-bio || true
 
@@ -219,7 +221,7 @@
     script = ''
       export PATH="/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-      darwin-rebuild switch --flake /Users/isala/Projects/dotfiles/nix#m3-personal 2>&1 | logger -t nix-sync
+      darwin-rebuild switch --flake /Users/isala/Projects/infra/dotfiles/nix#m3-personal 2>&1 | logger -t nix-sync
     '';
     serviceConfig = {
       StartCalendarInterval = [{

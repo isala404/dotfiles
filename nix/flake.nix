@@ -8,11 +8,11 @@
     nix-darwin.url = "github:LnL7/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
-    # Pin Homebrew to 4.6.x. Homebrew 5.0 dropped Library/Homebrew/brew.sh
-    # in favour of a pure-Ruby bootstrap, but nix-homebrew's wrapper still
-    # execs brew.sh, so activation fails on the "Homebrew bundle" step.
+    # Pin Homebrew to a known-good 5.1.x release. Newer cask metadata has
+    # started using macOS version symbols that older Homebrew builds fail to
+    # parse, which breaks the Homebrew bundle step during activation.
     brew-src = {
-      url = "github:Homebrew/brew/4.6.19";
+      url = "github:Homebrew/brew/5.1.6";
       flake = false;
     };
     nix-homebrew.inputs.brew-src.follows = "brew-src";

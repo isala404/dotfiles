@@ -193,7 +193,7 @@
     "...." = "cd ../../..";
     reload = "exec $SHELL";
     sync-m1 = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m1-wso2";
-    sync-m3 = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m3-personal";
+    sync-m3 = "sudo darwin-rebuild switch --flake ~/Projects/infra/dotfiles/nix#m3-personal";
   };
 
   # =============================================
@@ -237,6 +237,8 @@
 
       # Bun on PATH everywhere
       fish_add_path ~/.bun/bin
+      fish_add_path /opt/homebrew/bin
+      fish_add_path /opt/homebrew/sbin
     '';
   };
 
@@ -245,11 +247,8 @@
   # =============================================
   programs.zsh = {
     enable = true;
+    enableGlobalCompInit = false;
     interactiveShellInit = ''
-      eval "$(starship init zsh)"
-      eval "$(zoxide init zsh)"
-      eval "$(direnv hook zsh)"
-
       # FZF configuration
       export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
       export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
