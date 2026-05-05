@@ -328,7 +328,6 @@
       "dbeaver-community"
       "postman"
       "claude"
-      "claude-code"
       "codex" # OpenAI coding agent
 
       # Communication

@@ -138,6 +138,7 @@
 
       # Utilities
       "aldente"
+      "capcut"
       "macs-fan-control"
       "transmission"
       "google-drive"
