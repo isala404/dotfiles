@@ -12,7 +12,7 @@
     # started using macOS version symbols that older Homebrew builds fail to
     # parse, which breaks the Homebrew bundle step during activation.
     brew-src = {
-      url = "github:Homebrew/brew/5.1.6";
+      url = "github:Homebrew/brew/5.1.11";
       flake = false;
     };
     nix-homebrew.inputs.brew-src.follows = "brew-src";

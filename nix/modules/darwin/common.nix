@@ -120,6 +120,7 @@
     gnumake
     libiconv
     apple-sdk_15
+    zig
 
     # ─────────────────────────────────────────
     # Shell & Terminal

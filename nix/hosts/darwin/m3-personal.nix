@@ -43,6 +43,16 @@
     cmake
     gnupg
     imagemagick
+
+    # ─────────────────────────────────────────
+    # Cross-compilation (zig as CC/CXX for linux-amd64)
+    # ─────────────────────────────────────────
+    (pkgs.writeShellScriptBin "zig-cc-x86_64-linux-gnu" ''
+      exec ${pkgs.zig}/bin/zig cc -target x86_64-linux-gnu "$@"
+    '')
+    (pkgs.writeShellScriptBin "zig-cxx-x86_64-linux-gnu" ''
+      exec ${pkgs.zig}/bin/zig c++ -target x86_64-linux-gnu "$@"
+    '')
   ];
 
   environment.variables = {
@@ -69,6 +79,14 @@
 
     # OrbStack shell init
     source ~/.orbstack/shell/init.fish 2>/dev/null; or true
+
+    # Cross-compile Go with CGo to linux/amd64
+    function go-linux-amd64
+      CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+        CC="zig cc -target x86_64-linux-gnu" \
+        CXX="zig c++ -target x86_64-linux-gnu" \
+        go $argv
+    end
 
     # Quick project navigation
     function proj

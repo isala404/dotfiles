@@ -7,6 +7,12 @@
 
   home.packages = [ ];
 
+  # Cargo cross-compilation config
+  home.file.".cargo/config.toml".text = ''
+    [target.x86_64-unknown-linux-gnu]
+    linker = "zig-cc-x86_64-linux-gnu"
+  '';
+
   # Ghostty terminal config
   xdg.configFile."ghostty/config".text = ''
     font-family = JetBrainsMono Nerd Font
