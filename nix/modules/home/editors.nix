@@ -191,7 +191,6 @@
 
     ${pkgs.jq}/bin/jq '. * {
       "env": {
-        "CLAUDE_CODE_DISABLE_1M_CONTEXT": "1",
         "CLAUDE_CODE_NO_FLICKER": 1,
         "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6"
       },
@@ -199,10 +198,17 @@
       "enabledPlugins": {
         "rust-analyzer-lsp@claude-plugins-official": true,
         "gopls-lsp@claude-plugins-official": true,
-        "clangd-lsp@claude-plugins-official": true
+        "clangd-lsp@claude-plugins-official": true,
+        "typescript-lsp@claude-plugins-official": true,
+        "pyright-lsp@claude-plugins-official": true
       },
+      "effortLevel": "medium",
       "autoMemoryEnabled": false,
-      "skipDangerousModePermissionPrompt": true
+      "skipDangerousModePermissionPrompt": true,
+      "theme": "dark",
+      "autoCompactEnabled": true,
+      "inputNeededNotifEnabled": true,
+      "agentPushNotifEnabled": true
     }' "$settings_file" > "$settings_file.tmp" && mv "$settings_file.tmp" "$settings_file"
   '';
 

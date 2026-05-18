@@ -193,8 +193,8 @@
     "..." = "cd ../..";
     "...." = "cd ../../..";
     reload = "exec $SHELL";
-    sync-m1 = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m1-wso2";
-    sync-m3 = "sudo darwin-rebuild switch --flake ~/Projects/infra/dotfiles/nix#m3-personal";
+    sync-m1 = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m1-wso2; bunx skills add https://github.com/isala404/dotfiles/tree/main/skills -g --agent claude-code codex -y";
+    sync-m3 = "sudo darwin-rebuild switch --flake ~/Projects/infra/dotfiles/nix#m3-personal; bunx skills add https://github.com/isala404/dotfiles/tree/main/skills -g --agent claude-code codex -y";
   };
 
   # =============================================

@@ -241,6 +241,7 @@
       export PATH="/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
       darwin-rebuild switch --flake /Users/isala/Projects/infra/dotfiles/nix#m3-personal 2>&1 | logger -t nix-sync
+      sudo -u isala /bin/sh -lc 'bunx skills add https://github.com/isala404/dotfiles/tree/main/skills -g --agent claude-code codex -y' 2>&1 | logger -t nix-sync
     '';
     serviceConfig = {
       StartCalendarInterval = [{
