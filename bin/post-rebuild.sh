@@ -5,8 +5,9 @@ DOTFILES_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 # Install skills for AI coding agents
 bunx skills add "$DOTFILES_DIR/skills" -g --agent claude-code codex -y
-bunx skills add https://github.com/anthropics/skills/tree/main/skills --skill webapp-testing frontend-design -g --agent claude-code codex -y
+bunx skills add https://github.com/anthropics/skills/tree/main/skills --skill webapp-testing -g --agent claude-code codex -y
 bunx skills add https://github.com/mattpocock/skills/tree/main/skills --skill grill-me prototype -g --agent claude-code codex -y
+bunx skills add https://github.com/Leonxlnx/taste-skill/tree/main/skills --skill design-taste-frontend -g --agent claude-code codex -y
 
 # Sync AGENTS.md to all agent config locations
 agents_src="$DOTFILES_DIR/workflows/base/AGENTS.md"
