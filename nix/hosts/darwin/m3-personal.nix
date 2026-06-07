@@ -2,11 +2,22 @@
 # Hostname: Isalas-M3-Pro
 # User: isala
 # Enhanced for platform engineering + personal use
-{ pkgs, ... }:
+{ pkgs, config, ... }:
+let
+  # Derive paths from config so no machine-specific tree is hardcoded in source.
+  # `~/.dotfiles` is a symlink to the real checkout, created at runtime by
+  # post-rebuild.sh — the actual location never appears in tracked source.
+  homeDir = config.users.users.${config.system.primaryUser}.home;
+  dotfilesDir = "${homeDir}/.dotfiles";
+in
 {
   imports = [
     ../../modules/darwin/common.nix
   ];
+
+  # This machine's rebuild shortcut (kept here, not in the shared module).
+  environment.shellAliases.sync-m3 =
+    "sudo darwin-rebuild switch --flake ${dotfilesDir}/nix#m3-personal && ${dotfilesDir}/bin/post-rebuild.sh";
 
   # =============================================
   # Additional Packages for Personal Machine
@@ -112,7 +123,7 @@
     # Sync system config
     function sync
       echo "Syncing nix-darwin config..."
-      sudo darwin-rebuild switch --flake ~/Projects/infra/dotfiles/nix#m3-personal
+      sudo darwin-rebuild switch --flake ${dotfilesDir}/nix#m3-personal
     end
   '';
 
@@ -173,33 +184,33 @@
   # M3-specific activation (keychain-bio, credential helpers, Time Machine)
   # =============================================
   system.activationScripts.extraActivation.text = ''
-    # Compile and install keychain-bio (Touch ID gated keychain access)
+    # Compile and install keychain-bio (Touch ID gated keychain access).
+    # Sources are referenced as nix store paths so no checkout location leaks.
     echo "Building keychain-bio..." >&2
-    mkdir -p /Users/isala/.local/bin
-    DOTFILES="/Users/isala/Projects/infra/dotfiles"
-    swiftc -O -o /Users/isala/.local/bin/keychain-bio "$DOTFILES/bin/keychain-bio.swift" \
+    mkdir -p ${homeDir}/.local/bin
+    swiftc -O -o ${homeDir}/.local/bin/keychain-bio ${../../../bin/keychain-bio.swift} \
       -framework Security -framework LocalAuthentication 2>&1 | logger -t keychain-bio || true
 
     # Install BWS credential helpers
-    install -m 755 "$DOTFILES/bin/bws/aws-credential-helper.sh" /Users/isala/.aws/bws-credential-helper.sh 2>/dev/null || true
-    install -m 755 "$DOTFILES/bin/bws/kube-credential-helper.sh" /Users/isala/.kube/bws-credential-helper.sh 2>/dev/null || true
+    install -m 755 ${../../../bin/bws/aws-credential-helper.sh} ${homeDir}/.aws/bws-credential-helper.sh 2>/dev/null || true
+    install -m 755 ${../../../bin/bws/kube-credential-helper.sh} ${homeDir}/.kube/bws-credential-helper.sh 2>/dev/null || true
 
     # Time Machine exclusions — skip reproducible/cacheable data
     echo "Configuring Time Machine exclusions..." >&2
     for dir in \
       /nix \
-      /Users/isala/.cargo \
-      /Users/isala/.rustup \
-      /Users/isala/.npm-global \
-      /Users/isala/go \
-      /Users/isala/Library/Android/sdk \
-      /Users/isala/Library/Developer/Xcode/DerivedData \
-      /Users/isala/Library/Developer/CoreSimulator \
-      /Users/isala/Library/Caches \
-      /Users/isala/.cache \
-      /Users/isala/.gradle \
-      /Users/isala/.cocoapods \
-      /Users/isala/.pub-cache \
+      ${homeDir}/.cargo \
+      ${homeDir}/.rustup \
+      ${homeDir}/.npm-global \
+      ${homeDir}/go \
+      ${homeDir}/Library/Android/sdk \
+      ${homeDir}/Library/Developer/Xcode/DerivedData \
+      ${homeDir}/Library/Developer/CoreSimulator \
+      ${homeDir}/Library/Caches \
+      ${homeDir}/.cache \
+      ${homeDir}/.gradle \
+      ${homeDir}/.cocoapods \
+      ${homeDir}/.pub-cache \
     ; do
       tmutil addexclusion -p "$dir" 2>/dev/null || true
     done
@@ -217,17 +228,17 @@
       dist \
       build \
     ; do
-      find /Users/isala/Projects -maxdepth 4 -type d -name "$pattern" -exec tmutil addexclusion {} \; 2>/dev/null || true
+      find ${homeDir}/Projects -maxdepth 4 -type d -name "$pattern" -exec tmutil addexclusion {} \; 2>/dev/null || true
     done
 
     # ML model caches
     for dir in \
-      /Users/isala/.cache/huggingface \
-      /Users/isala/.cache/torch \
-      /Users/isala/.cache/pip \
-      /Users/isala/.cache/uv \
-      /Users/isala/.ollama \
-      /Users/isala/.lmstudio \
+      ${homeDir}/.cache/huggingface \
+      ${homeDir}/.cache/torch \
+      ${homeDir}/.cache/pip \
+      ${homeDir}/.cache/uv \
+      ${homeDir}/.ollama \
+      ${homeDir}/.lmstudio \
     ; do
       tmutil addexclusion -p "$dir" 2>/dev/null || true
     done
@@ -240,8 +251,8 @@
     script = ''
       export PATH="/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-      darwin-rebuild switch --flake /Users/isala/Projects/infra/dotfiles/nix#m3-personal 2>&1 | logger -t nix-sync
-      sudo -u isala /bin/sh -lc 'bunx skills add https://github.com/isala404/dotfiles/tree/main/skills -g --agent claude-code codex -y' 2>&1 | logger -t nix-sync
+      darwin-rebuild switch --flake ${dotfilesDir}/nix#m3-personal 2>&1 | logger -t nix-sync
+      sudo -u ${config.system.primaryUser} /bin/sh -lc 'bunx skills add https://github.com/isala404/dotfiles/tree/main/skills -g --agent claude-code codex -y' 2>&1 | logger -t nix-sync
     '';
     serviceConfig = {
       StartCalendarInterval = [{

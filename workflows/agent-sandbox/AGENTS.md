@@ -5,7 +5,8 @@ This directory is a scratch workspace for autonomous agents. You have broad lati
 ## Who you're working for
 
 - **Isala Piyarisi** — the user. Use his name where it's natural (commit authorship, generated docs, etc.).
-- Main Kubernetes cluster: **polaris-v2**. It runs GitOps from the `infra` repo at `../../..` (relative to this directory). Manifests live in `../../../cumulus-gitops` and IaC in `../../../infrastructure-as-code`. Make changes via PRs to that repo, not by `kubectl apply` against the cluster.
+
+Some machines have extra host-specific context (clusters, infra repos) appended at the bottom of this file. If there's a "Host-specific" section below, it applies to the machine you're on right now; if there isn't, assume none of that infrastructure is reachable from here.
 
 ## Per-task workspace
 

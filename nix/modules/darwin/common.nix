@@ -2,6 +2,10 @@
 # Shared across all macOS machines
 # Enhanced with modern Rust CLI tools and platform engineering essentials
 { pkgs, config, ... }:
+let
+  # Resolve the primary user's home from config instead of hardcoding a path.
+  homeDir = config.users.users.${config.system.primaryUser}.home;
+in
 {
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
@@ -193,8 +197,8 @@
     "..." = "cd ../..";
     "...." = "cd ../../..";
     reload = "exec $SHELL";
-    sync-m1 = "sudo darwin-rebuild switch --flake ~/Projects/dotfiles/nix#m1-wso2 && ~/Projects/dotfiles/bin/post-rebuild.sh";
-    sync-m3 = "sudo darwin-rebuild switch --flake ~/Projects/infra/dotfiles/nix#m3-personal && ~/Projects/dotfiles/bin/post-rebuild.sh";
+    # Per-machine `sync-*` aliases are defined in each host module so the
+    # checkout path stays with the host that actually has it.
   };
 
   # =============================================
@@ -316,7 +320,6 @@
 
     brews = [
       "mas" # Mac App Store CLI
-      "antigravity-cli"
       "opencode" # AI coding assistant
     ];
 
@@ -330,6 +333,7 @@
       "postman"
       "claude"
       "codex" # OpenAI coding agent
+      "antigravity-cli"
 
       # Communication
       "discord"
@@ -353,8 +357,8 @@
 
   system.activationScripts.extraActivation.text = ''
     softwareupdate --install-rosetta --agree-to-license
-    echo "Setting fish as default shell for isala..." >&2
-    dscl . -create /Users/isala UserShell /run/current-system/sw/bin/fish
+    echo "Setting fish as default shell for ${config.system.primaryUser}..." >&2
+    dscl . -create ${homeDir} UserShell /run/current-system/sw/bin/fish
   '';
 
   # =============================================

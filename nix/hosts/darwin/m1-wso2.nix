@@ -1,11 +1,19 @@
 # M1 Office Computer Configuration (WSO2)
 # User: isala
 # Platform Engineering focused setup
-{ pkgs, ... }:
+{ pkgs, config, ... }:
+let
+  homeDir = config.users.users.${config.system.primaryUser}.home;
+  dotfilesDir = "${homeDir}/Projects/dotfiles";
+in
 {
   imports = [
     ../../modules/darwin/common.nix
   ];
+
+  # This machine's rebuild shortcut (kept here, not in the shared module).
+  environment.shellAliases.sync-m1 =
+    "sudo darwin-rebuild switch --flake ${dotfilesDir}/nix#m1-wso2 && ${dotfilesDir}/bin/post-rebuild.sh";
 
   # =============================================
   # Additional Work-Specific Packages

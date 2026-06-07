@@ -191,8 +191,10 @@
 
     ${pkgs.jq}/bin/jq '. * {
       "env": {
-        "CLAUDE_CODE_NO_FLICKER": 1,
-        "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-opus-4-6"
+        "CLAUDE_CODE_DISABLE_1M_CONTEXT": 1,
+        "CLAUDE_CODE_DISABLE_AUTO_MEMORY": 1,
+        "CLAUDE_CODE_DISABLE_FAST_MODE": 1,
+        "CLAUDE_CODE_NO_FLICKER": 1
       },
       "model": "claude-opus-4-7",
       "enabledPlugins": {
@@ -202,7 +204,7 @@
         "typescript-lsp@claude-plugins-official": true,
         "pyright-lsp@claude-plugins-official": true
       },
-      "effortLevel": "medium",
+      "effortLevel": "auto",
       "autoMemoryEnabled": false,
       "skipDangerousModePermissionPrompt": true,
       "theme": "dark",
