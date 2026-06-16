@@ -196,7 +196,7 @@
         "CLAUDE_CODE_DISABLE_FAST_MODE": 1,
         "CLAUDE_CODE_NO_FLICKER": 1
       },
-      "model": "claude-opus-4-7",
+      "model": "claude-opus-4-8",
       "enabledPlugins": {
         "rust-analyzer-lsp@claude-plugins-official": true,
         "gopls-lsp@claude-plugins-official": true,
