@@ -53,6 +53,19 @@ A function or class does one thing. The smell isn't line count — it's whether 
 
 No line limits. A 60-line function that does one thing is fine. A 10-line function that does three isn't.
 
+### Comments explain why, not what
+
+Good comments explain why, not what. The code already shows what it's doing; a comment that restates it is wasted space. Write one only when it isn't obvious to the next person why the code is the way it is:
+- Why a decision was made.
+- A non-obvious consequence or gotcha.
+- The business or domain context.
+- Genuinely tricky or unusual code.
+- A workaround for an external problem.
+
+Never restate the obvious, leave a lie (outdated comment), leave commented-out code lying around, or use a comment to compensate for bad naming.
+
+Before writing a comment, ask: could clearer code make it unnecessary? If yes, do that instead. Good code explains how; good comments explain why — the best codebases use few, but the ones they keep can't be derived just by reading the code.
+
 ---
 
 ## 2. Restraint — what not to do
@@ -196,6 +209,14 @@ Confirm before doing anything that mutates state outside the working tree:
 - `rm -rf` outside the project directory, or on paths you didn't create.
 
 Read-only operations (`ls`, `cat`, `rg`, `git log`, `git diff`, `kubectl get`, `gh pr view`, `docker ps`) need no confirmation. When in doubt, ask.
+
+### Scratch tooling
+
+When you need to run a throwaway script or try a dependency, keep it ephemeral — don't install into the system or pollute the project:
+
+- Python: `uv` with a venv in a temp dir.
+- JavaScript/TypeScript: `bun`.
+- Anything else (system tools, compilers, CLIs): `nix shell`.
 
 ---
 
