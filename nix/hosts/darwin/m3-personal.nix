@@ -147,6 +147,10 @@ in
   nix-homebrew.enableZshIntegration = false;
 
   homebrew = {
+    taps = [
+      "steipete/tap"
+    ];
+
     brews = [
       "llvm" # clang/clang-tools without Nix's cc-wrapper
     ];
@@ -164,6 +168,9 @@ in
 
       # Communication
       "whatsapp"
+
+      # Tools
+      "steipete/tap/codexbar"
 
       # Utilities
       "aldente"

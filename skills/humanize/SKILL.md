@@ -1,6 +1,6 @@
 ---
 name: humanize
-description: MANDATORY skill for rewriting robotic, dry, or "AI-style" text into natural human prose. You MUST trigger this skill whenever a user mentions "humanizing," "de-AI," "removing slop," or complains about "annoying" or "robotic" writing. This skill is the ONLY tool allowed for stripping AI tells (like "delve," "tapestry," or "vibrant") and fixing robotic sentence rhythms. Use it for ANY content the user wants to sound like it was written by a real person (emails, tweets, stories, or essays), even if they don't explicitly name the skill.
+description: MANDATORY skill for rewriting robotic, dry, or "AI-style" text into natural human prose. You MUST trigger this skill whenever a user mentions "humanizing".
 ---
 
 # Humanize: The Anti-Slop Writing Skill

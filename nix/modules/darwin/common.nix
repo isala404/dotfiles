@@ -127,6 +127,11 @@ in
     zig
 
     # ─────────────────────────────────────────
+    # Documents & Typesetting
+    # ─────────────────────────────────────────
+    tectonic # self-contained LaTeX/XeTeX engine (resume PDFs)
+
+    # ─────────────────────────────────────────
     # Shell & Terminal
     # ─────────────────────────────────────────
     starship
@@ -279,6 +284,10 @@ in
     nerd-fonts.hack # Clean, easy to read
     nerd-fonts.victor-mono # Cursive italics
     nerd-fonts.symbols-only # Just the icons/symbols
+
+    # Document fonts (LaTeX resume: Lato body, Raleway Light/SemiBold headings)
+    lato
+    raleway
   ];
 
   # =============================================
@@ -315,7 +324,11 @@ in
     onActivation = {
       autoUpdate = true;
       upgrade = true;
-      cleanup = "zap";
+      # nix-darwin 26.11 emits the removed `--force-cleanup` flag for
+      # cleanup = "zap", which Homebrew 6.x rejects. Disable the built-in
+      # cleanup and pass the modern equivalent via extraFlags below.
+      cleanup = "none";
+      extraFlags = [ "--cleanup" "--zap" ];
     };
 
     brews = [
@@ -332,7 +345,8 @@ in
       "dbeaver-community"
       "postman"
       "claude"
-      "codex" # OpenAI coding agent
+      "codex" # OpenAI coding agent (CLI)
+      "codex-app" # OpenAI Codex desktop app
       "antigravity-cli"
 
       # Communication
