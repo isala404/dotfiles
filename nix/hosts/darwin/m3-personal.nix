@@ -173,7 +173,6 @@ in
       "steipete/tap/codexbar"
 
       # Utilities
-      "aldente"
       "capcut"
       "macs-fan-control"
       "transmission"
