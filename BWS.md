@@ -1,21 +1,28 @@
 # Bitwarden Secrets Manager (BWS)
 
-Credentials (AWS keys, kubeconfig, SSH keys, GPG keys) are stored in BWS and fetched on demand. Access is gated behind Touch ID with password fallback. Responses are cached locally to avoid repeated API calls and prompts.
+Credentials (AWS keys, kubeconfig, SSH keys, GPG keys) are stored in BWS and fetched on demand. Access is gated behind Touch ID with password fallback. Responses are cached locally to avoid repeated API calls and prompts. Both caches expire after inactivity rather than a fixed period from the initial unlock.
 
 ## How it works
 
 ```
-tool request (aws, kubectl, bws)
-  → check response cache (~/.cache/bws/, 1hr TTL)
-    → HIT: return cached response, done
+aws or kubectl request
+  → check response cache (~/.cache/bws/, 1hr idle timeout)
+    → HIT: renew last-used time, return cached response, done
     → MISS:
-      → check Touch ID cache (5min TTL)
-        → HIT: skip prompt
+      → check Touch ID cache (5min idle timeout)
+        → HIT: renew last-used time, skip prompt
         → MISS: Touch ID prompt (password fallback)
       → read BWS token from macOS Keychain
       → call BWS API
       → cache response
       → return
+
+direct bws request
+  → check Touch ID cache (5min idle timeout)
+    → HIT: renew last-used time, skip prompt
+    → MISS: Touch ID prompt (password fallback)
+  → read BWS token from macOS Keychain
+  → call BWS API
 ```
 
 ## Components
@@ -27,6 +34,18 @@ tool request (aws, kubectl, bws)
 | `bin/bws/kube-credential-helper.sh` | kubectl exec credential plugin that fetches certs from BWS |
 
 The fish shell has a `bws` wrapper function that injects the token from Keychain on every call.
+
+The default idle timeouts can be overridden per command or exported in the shell:
+
+```bash
+# Cached kubectl and AWS responses (default: 3600 seconds)
+set -x BWS_CACHE_IDLE_TIMEOUT_SECONDS 1800
+
+# Touch ID authorization used by direct bws calls (default: 300 seconds)
+set -x BWS_TOUCH_ID_IDLE_TIMEOUT_SECONDS 600
+```
+
+As long as a cache is used before its idle timeout, its last-used time is renewed. A Touch ID prompt is required again only after the relevant cache has gone unused for the configured duration.
 
 ## Initial setup
 

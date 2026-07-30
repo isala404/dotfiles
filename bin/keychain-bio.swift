@@ -12,7 +12,27 @@ guard args.count >= 3 else {
 let action = args[1]
 let service = args[2]
 let touchCacheFile = NSTemporaryDirectory() + "keychain-bio-touch-\(NSUserName())"
-let touchCacheTTL: TimeInterval = 300
+let touchCacheIdleTimeout: TimeInterval = {
+    let environment = ProcessInfo.processInfo.environment
+    guard let value = environment["BWS_TOUCH_ID_IDLE_TIMEOUT_SECONDS"] else {
+        return 300
+    }
+    guard let timeout = TimeInterval(value), timeout.isFinite, timeout > 0 else {
+        fputs("BWS_TOUCH_ID_IDLE_TIMEOUT_SECONDS must be a positive number\n", stderr)
+        exit(1)
+    }
+    return timeout
+}()
+
+func updateTouchIDCache() {
+    let fm = FileManager.default
+    if fm.fileExists(atPath: touchCacheFile) {
+        try? fm.setAttributes([.modificationDate: Date()], ofItemAtPath: touchCacheFile)
+    } else {
+        fm.createFile(atPath: touchCacheFile, contents: nil)
+        chmod(touchCacheFile, 0o600)
+    }
+}
 
 func touchIDCacheValid() -> Bool {
     let fm = FileManager.default
@@ -20,12 +40,10 @@ func touchIDCacheValid() -> Bool {
           let modified = attrs[.modificationDate] as? Date else {
         return false
     }
-    return Date().timeIntervalSince(modified) < touchCacheTTL
-}
-
-func updateTouchIDCache() {
-    FileManager.default.createFile(atPath: touchCacheFile, contents: nil)
-    chmod(touchCacheFile, 0o600)
+    guard Date().timeIntervalSince(modified) < touchCacheIdleTimeout else {
+        return false
+    }
+    return true
 }
 
 func requireTouchID() {
@@ -96,6 +114,8 @@ func get(service: String) {
         fputs("Failed to retrieve: \(SecCopyErrorMessageString(status, nil) ?? "unknown" as CFString)\n", stderr)
         exit(1)
     }
+
+    updateTouchIDCache()
 
     if let data = result as? Data, let value = String(data: data, encoding: .utf8) {
         print(value.trimmingCharacters(in: .whitespacesAndNewlines), terminator: "")

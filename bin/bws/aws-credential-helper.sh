@@ -4,13 +4,20 @@ set -euo pipefail
 SECRET_ID="$1"
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/bws"
 CACHE_FILE="$CACHE_DIR/aws-$SECRET_ID"
-CACHE_TTL=3600
+CACHE_IDLE_TIMEOUT="${BWS_CACHE_IDLE_TIMEOUT_SECONDS:-3600}"
+
+if [[ ! "$CACHE_IDLE_TIMEOUT" =~ ^[0-9]+$ ]] || (( 10#$CACHE_IDLE_TIMEOUT <= 0 )); then
+  echo "BWS_CACHE_IDLE_TIMEOUT_SECONDS must be a positive integer" >&2
+  exit 1
+fi
+CACHE_IDLE_TIMEOUT=$(( 10#$CACHE_IDLE_TIMEOUT ))
 
 mkdir -p "$CACHE_DIR"
 
 if [[ -f "$CACHE_FILE" ]]; then
   age=$(( $(date +%s) - $(stat -f %m "$CACHE_FILE") ))
-  if (( age < CACHE_TTL )); then
+  if (( age < CACHE_IDLE_TIMEOUT )); then
+    touch "$CACHE_FILE"
     cat "$CACHE_FILE"
     exit 0
   fi
