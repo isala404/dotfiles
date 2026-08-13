@@ -14,12 +14,20 @@ Two things to do before you touch the task itself.
 
 **1. Load what you already know about the user.** At `.agents/memory/` (relative to this sandbox root) is a small knowledge base built up across sessions. Read it at the start of every task so the user never has to re-explain himself:
 
-- `profile.md` — who Isala is: role, team, the stack and machines he works on, standing context.
-- `preferences.md` — how he likes things done: tools, conventions, formats, defaults he's stated, pet peeves.
-- `people.md` — colleagues and collaborators who come up, with enough detail to place each one.
-- `good-to-know.md` — everything else worth not rediscovering: infra quirks, gotchas, recurring facts.
+- `profile.md` — who Isala is: role, employer, machines, standing life context.
+- `preferences.md` — how he likes things done: durable defaults and pet peeves that apply across tasks.
+- `people.md` — recurring people, one entry each: who they are, how to reach them.
+- `good-to-know.md` — durable facts about the machines, accounts, and infrastructure: aliases, quirks, gotchas that will bite again.
 
-If the folder or a file doesn't exist yet, create it the first time you have something worth recording. Keep entries dense and factual — this is reference material, not prose. Update it as you learn: the whole point is that the user shouldn't have to tell you the same thing twice.
+If the folder or a file doesn't exist yet, create it the first time you have something worth recording.
+
+**What earns a memory entry.** Every agent reads all of memory before every task, so each entry pays rent in every future context window. The admission test: *would this change what an agent does in a completely different, unrelated task?* A machine alias, a standing account quirk, a durable stated preference, a person who recurs — yes. How this task was solved — findings, evidence, version numbers, hashes, dead ends, chronology — no. That material belongs in the task's `NOTES.txt`.
+
+When you write memory:
+
+- **One entry, one or two lines, present tense.** State the fact as it stands now. No discovery dates, no "fixed on", no investigation story — the story lives in the task's `NOTES.txt`.
+- **Point, don't copy.** If a future task might need the deep detail, write one line naming the durable fact plus the task folder whose `NOTES.txt` holds the rest. An entry that needs a paragraph to be useful is a task note in the wrong file.
+- **Prune as you read.** When you load memory and an entry is stale, superseded, or clearly task-scoped, fix or delete it on the spot — first moving anything not already recorded elsewhere into the owning task's `NOTES.txt`. A memory file pushing past ~50 lines is overdue for pruning.
 
 **2. Decide if this is a new task or a continuation.** Scan the existing task folders, including those already moved into `completed/`. If the request continues, revisits, or expands work from an earlier one, work *inside that folder* and read its `NOTES.txt` first — it's the record of what was tried, what worked, and what was left open. If the task lives in `completed/`, move it back to the root before resuming. Only create a fresh folder for genuinely new work. If it's ambiguous which existing task a request belongs to, ask rather than guess.
 
@@ -46,7 +54,7 @@ What goes in it:
 - **What the user needs to know** — decisions made, tradeoffs, assumptions, anything awaiting his attention or sign-off, and open questions.
 - **How the task grew** — if the scope expanded or the task was resumed later, append what changed and why so the history stays readable.
 
-This is the sandbox's version of a progress log: anything you'd otherwise jot into a `PROGRESS.md` goes here instead. Dated entries, newest on top, is a fine default. When something you learn is durable rather than task-specific — a preference, a fact about a person, an infra quirk — lift it up into `.agents/memory/` so it outlives the task folder.
+This is the sandbox's version of a progress log: anything you'd otherwise jot into a `PROGRESS.md` goes here instead. Dated entries, newest on top, is a fine default. When something you learn is durable rather than task-specific — a preference, a fact about a person, an infra quirk — lift it up into `.agents/memory/` so it outlives the task folder, but only if it passes the memory admission test above: one or two lines, the fact, not the story.
 
 ## Lean on skills, don't brute-force
 
@@ -79,9 +87,9 @@ Two runtimes are pre-wired at the sandbox root. Pick whichever fits the task —
 - A `package.json` lives at the sandbox root. Install with `bun add <pkg>`, run with `bun run <script>` or `bun script.ts`.
 - Don't introduce `npm`, `pnpm`, or `yarn` lockfiles.
 
-## Secrets — read `../../BWS.md` first
+## Secrets — use the `bws-secrets` skill first
 
-All credentials (AWS, kubeconfig, SSH, GPG, API tokens) live in Bitwarden Secrets Manager. The full setup is documented in `../../BWS.md` — read it before touching anything secret-related.
+All credentials (AWS, kubeconfig, SSH, GPG, API tokens) live in Bitwarden Secrets Manager. The full setup is documented in the `bws-secrets` skill — read it before touching anything secret-related.
 
 **Hard rules:**
 

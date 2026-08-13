@@ -1,11 +1,15 @@
 ---
 name: excalidraw-render
-description: Generate clean, production-quality Excalidraw architecture diagrams from any input — ASCII sketches, vague descriptions, component lists, screenshots, or rough mockups. Use this skill whenever the user asks for an architecture diagram, system diagram, data flow, sequence diagram, call chain, or any visual diagram, even when they just say "draw me X" or paste rough ASCII art. The skill writes a .excalidraw JSON file, renders it locally to PNG via @swiftlysingh/excalidraw-cli, and iterates by viewing the rendered image until layout, alignment, spacing, and labels are correct. Heavy use of Haiku sub-agents for all JSON authoring and edits keeps token costs low — the main agent only critiques rendered images, never reads or edits the raw JSON.
+description: Use when asked to draw or diagram something - architecture, data flow, sequence, call chain, an ASCII sketch to clean up, or an existing .excalidraw to edit. Outputs an editable .excalidraw plus a PNG.
 ---
 
 # Excalidraw Render Skill
 
-Make a polished Excalidraw diagram from a rough input, without baby-sitting. The main agent thinks in pixels (by viewing rendered PNGs); a Haiku sub-agent does the JSON work.
+**Requires:** `npx` (Node) and network access on the first run, which fetches `@swiftlysingh/excalidraw-cli`. Also needs the ability to spawn a sub-agent — the cost model below depends on it. If sub-agents are unavailable in this harness, say so and offer to author the JSON directly at higher token cost rather than silently doing it.
+
+Make a polished Excalidraw diagram from a rough input, without baby-sitting. The main agent thinks in pixels (by looking at rendered PNGs); a Haiku sub-agent does the JSON work.
+
+**Scope:** draw what the user described, at the level of detail they gave. Don't add components they didn't mention because the architecture "should" have a cache or a load balancer, don't expand a three-box sketch into a full system map, and don't redesign their architecture while diagramming it. If something in the input is genuinely ambiguous, draw your best reading and say what you assumed.
 
 ---
 
@@ -14,7 +18,7 @@ Make a polished Excalidraw diagram from a rough input, without baby-sitting. The
 A `.excalidraw` file is huge: a 10-box diagram is 3–5K tokens. Reading or editing it with the main model is wasteful and slow. Vision on a rendered PNG is far cheaper and far more accurate for layout judgment.
 
 **The main agent MUST:**
-- ✅ View the rendered PNG to judge correctness (this is what vision is for)
+- ✅ Read the rendered PNG to judge correctness (this is what vision is for)
 - ✅ Plan layouts up-front (positions, sizes, colors) — architectural judgment
 - ✅ Critique specific visual issues from the PNG (overlaps, clipping, misalignment)
 - ✅ Dispatch surgical fix instructions to a Haiku sub-agent
@@ -22,7 +26,7 @@ A `.excalidraw` file is huge: a 10-box diagram is 3–5K tokens. Reading or edit
 **The main agent MUST NOT:**
 - ❌ Read the `.excalidraw` JSON file — delegate to Haiku
 - ❌ Write the `.excalidraw` JSON inline — delegate to Haiku
-- ❌ Edit JSON with `str_replace` manually — delegate to Haiku
+- ❌ Hand-edit the JSON — delegate to Haiku
 - ❌ Loop forever — hard cap at **3** render–critique cycles
 
 ---
@@ -69,7 +73,7 @@ Write this as a plain-text **layout brief**. NOT JSON. Haiku will produce the JS
 
 ## Step 2 — Hand off to Haiku to author the JSON
 
-Spawn a `claude-haiku-4-5` sub-agent. Pass it the layout brief, the output path, **and inline the Schema Cheat Sheet below** so it doesn't have to guess.
+Spawn a sub-agent on the Haiku model. Pass it the layout brief, the output path, **and inline the Schema Cheat Sheet below** so it doesn't have to guess.
 
 **Sub-agent prompt template (author):**
 
@@ -106,9 +110,9 @@ No setup needed — `npx` handles installation on first run. Uses `@excalidraw/u
 
 ---
 
-## Step 4 — View the PNG and critique
+## Step 4 — Look at the PNG and critique
 
-`view` the PNG. Walk this checklist and write down concrete fixes in pixel / id terms:
+Read the PNG (image files render visually). Walk this checklist and write down concrete fixes in pixel / id terms:
 
 | Check | What to look for | Fix instruction to Haiku |
 |---|---|---|
@@ -154,7 +158,7 @@ Re-render and re-view. **Hard cap: 3 cycles total.** After cycle 3, present what
 
 ## Step 6 — Present
 
-Show the final rendered PNG with `present_files`. Briefly summarize: components shown, connections, and any unresolved issues. Both `diagram.excalidraw` (editable) and `diagram.png` (image) should be available.
+Give the user both paths — `diagram.excalidraw` (editable, drag into excalidraw.com) and `diagram.png` (the image) — and a two-line summary: what the diagram shows, plus any issue you couldn't resolve inside the cycle cap. Don't paste the JSON.
 
 ---
 
