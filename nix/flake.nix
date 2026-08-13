@@ -8,11 +8,11 @@
     nix-darwin.url = "github:LnL7/nix-darwin/master";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
-    # Pin Homebrew to a known-good 5.1.x release. Newer cask metadata has
-    # started using macOS version symbols that older Homebrew builds fail to
-    # parse, which breaks the Homebrew bundle step during activation.
+    # Homebrew's cask API metadata updates daily and assumes a recent brew, so
+    # this pin has to be bumped whenever a cask starts using a DSL stanza the
+    # pinned version doesn't know (e.g. command_wrapper, added in 6.0.13).
     brew-src = {
-      url = "github:Homebrew/brew/5.1.11";
+      url = "github:Homebrew/brew/6.0.17";
       flake = false;
     };
     nix-homebrew.inputs.brew-src.follows = "brew-src";

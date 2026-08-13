@@ -21,6 +21,7 @@ agents_src="$DOTFILES_DIR/workflows/base/AGENTS.md"
 targets=(
   "$HOME/.claude/CLAUDE.md"
   "$HOME/.agents/AGENTS.md"
+  "$HOME/.codex/AGENTS.md"
 )
 
 for target in "${targets[@]}"; do
