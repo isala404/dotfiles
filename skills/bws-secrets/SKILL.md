@@ -83,7 +83,7 @@ All of this plumbing is host-specific to `m3-personal`. On another host the wrap
 
 ## Reading secrets
 
-**In fish**, `bws` is a wrapper function that injects the token, so it just works:
+**In an interactive fish shell**, `bws` is a wrapper function that injects the token, so it just works:
 
 ```bash
 bws project list                 # project IDs
@@ -92,11 +92,17 @@ bws secret list <project-id>     # scoped to one project
 bws secret get <secret-id> -o json | jq -r .value | <consumer>
 ```
 
-**Outside fish** (bash scripts, the credential helpers, anything non-interactive) there is no wrapper, so export the token yourself:
+**Anywhere non-interactive** there is no wrapper and you must supply the token yourself. Note that this includes non-interactive *fish*: the function is defined in `programs.fish.interactiveShellInit`, so a fish shell that isn't interactive gets the raw binary and fails with `Error: Missing access token`. Claude Code is the common case — both its `Bash` tool and its `!` prefix run this way, and the `!` prefix runs under zsh regardless of the configured shell, so use the POSIX form below rather than the fish one.
 
 ```bash
 export BWS_ACCESS_TOKEN=$("$HOME/.local/bin/keychain-bio" get bws-access-token)
 bws secret get "$SECRET_ID" -o json | jq -r .value
+```
+
+The same thing in interactive fish, scoped to the one command so the token never enters the shell's environment:
+
+```fish
+env BWS_ACCESS_TOKEN=(~/.local/bin/keychain-bio get bws-access-token) bws secret list
 ```
 
 `keychain-bio get` prints the value trimmed and without a trailing newline, so command substitution is safe.
@@ -234,7 +240,7 @@ rm -f $TMPDIR/keychain-bio-touch-$USER ~/.cache/bws/*
 | `aws` reports the credential process is missing | Helper not installed. Run `sync`, then check `~/.aws/bws-credential-helper.sh` exists and is executable. |
 | Credentials still stale after rotating the secret | Cached response. `rm ~/.cache/bws/aws-<secret-id>`. |
 | `bws` returns 401 / 404 | Token revoked, or the secret isn't shared with the service account's project. Check in the web vault. |
-| Helper works in fish but not in a script | The `bws` wrapper is a fish function, so scripts get the raw binary with no token. Export `BWS_ACCESS_TOKEN` from `keychain-bio` first. |
+| `Error: Missing access token` | No wrapper in this shell. It is a fish *function* from `interactiveShellInit`, so scripts, `Bash` tool calls and Claude Code's `!` prefix all get the raw binary — being in fish is not enough, it has to be interactive. Supply `BWS_ACCESS_TOKEN` from `keychain-bio` as shown under Reading secrets. |
 
 ## Changing the plumbing
 
