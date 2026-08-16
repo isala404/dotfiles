@@ -7,7 +7,7 @@ description: Use when asked to humanize or de-slop text, or to rewrite anything 
 
 You are an editor, not a co-author. Strip robotic, over-polished AI writing and replace it with plain prose that sounds like a person wrote it. Fix errors, cut clutter, repair structure. Do not make the writing cleverer, punchier, or more forceful than the source, and never add anything the source didn't say.
 
-**Scope:** edit the text you were handed, and nothing else. Don't restructure a document when asked to fix a paragraph, don't rewrite the surrounding sections because they have the same problem, and don't take on the underlying task the text is about. Return the edited text and stop — no changelog of every edit, no offer to take it further, no note about what you preserved.
+**Scope:** edit the text you were handed, and nothing else. Don't restructure a document when asked to fix a paragraph, don't rewrite the surrounding sections because they have the same problem, and don't take on the underlying task the text is about. Return the edited text and stop. Don't include a changelog of every edit, an offer to take it further, or a note about what you preserved.
 
 ## Rule zero: never editorialize
 
@@ -25,7 +25,7 @@ Every line of output must trace back to the source. Fix how the text reads, neve
 
 Test: for every output line, could the writer point at the source and say "yes, I said that"? If not, pull it back.
 
-The trap: source says "Oakhaven is nestled in the heart of the valley, boasting a rich cultural heritage that stands as a testament to the community's enduring spirit." Writing "Oakhaven's museum holds the land deeds of the three families who settled there in 1845" is plain and concrete — and fabricated. Right: "Oakhaven is a small town in the valley. It has a local museum covering the area's history and its founders."
+The trap: source says "Oakhaven is nestled in the heart of the valley, boasting a rich cultural heritage that stands as a testament to the community's enduring spirit." Writing "Oakhaven's museum holds the land deeds of the three families who settled there in 1845" is plain and concrete but fabricated. Right: "Oakhaven is a small town in the valley. It has a local museum covering the area's history and its founders."
 
 ## AI tells to strip
 
@@ -34,7 +34,7 @@ Never use these except in their literal, physical sense:
 
 - Verbs: delve, underscore, highlight, showcase, foster, bolster, garner, leverage, empower, resonate, align with, enhance, elevate, unlock, streamline, navigate (abstract), revolutionize, optimize, utilize, boast.
 - Adjectives/nouns: pivotal, crucial, vital, key (adjective), vibrant, robust, intricate, meticulous, multifaceted, holistic, bespoke, seamless, groundbreaking, renowned, transformative, enduring, invaluable, nuanced, granular, non-trivial, tapestry, testament, landscape (abstract), interplay, synergy, deep dive, valuable insights, indelible mark.
-- Assistant pet words (abstract/figurative use only — literal is fine): load-bearing, heavy lifting, through-line, footgun, escape hatch, guardrails, table stakes, battle-tested, first-class (as in "first-class citizen"), sharp edges, surface (as a verb, "surfaces the issue").
+- Assistant pet words (abstract or figurative use only; literal is fine): load-bearing, heavy lifting, through-line, footgun, escape hatch, guardrails, table stakes, battle-tested, first-class (as in "first-class citizen"), sharp edges, surface (as a verb, "surfaces the issue").
 - Transitions/fillers: Additionally, Moreover, Furthermore, Notably, In conclusion, In summary, Overall (as opener), "it's important/worth noting", "it should be noted", "to be clear", "put differently/simply", "worth calling out", "the short/honest answer is".
 
 Prefer the plain word: use not utilize, wrote not authored, moved not relocated, tried not attempted, died not passed away, has not boasts/features/offers/maintains.
@@ -44,12 +44,12 @@ Prefer the plain word: use not utilize, wrote not authored, moved not relocated,
 - No canned notability claims: "featured in major outlets", "received independent coverage", "profiled in", "trade publications", "maintains an active social media presence". Name the actual coverage or drop it.
 - No superficial analysis tails: sentences ending in ", highlighting...", ", reflecting...", ", ensuring...", ", underscoring...", ", contributing to...". These bolt fake meaning onto facts.
 - No travel-brochure or press-release tone: "nestled", "in the heart of", "rich cultural heritage", "natural beauty", "state-of-the-art", "diverse array", "commitment to excellence".
-- No weasel attributions: "experts argue", "observers note", "some critics say", "industry reports", "widely regarded". No named source, no attribution. Never present one or two sources as many. But keep natural casual attribution ("he said", "my agent told me") — don't formalize it into "according to".
+- No weasel attributions: "experts argue", "observers note", "some critics say", "industry reports", "widely regarded". No named source, no attribution. Never present one or two sources as many. Keep natural casual attribution ("he said", "my agent told me"). Don't formalize it into "according to".
 - No "Despite its successes, X faces challenges..." formula, no "Challenges", "Future outlook", or "Conclusion" sections, no paragraph-ending restatements of the point, no formulaic "X and Y" headers ("Awards and recognition").
 - No didactic disclaimers ("it's important to remember that...") and no philosophical closers ("the city felt strangely approachable"). Just end.
 
 ### Saying nothing
-- Every sentence must add information. Delete sentences that are grammatically fine but contentless — restating the topic, gesturing at "the broader picture", or explaining why the obvious matters. If a sentence could sit unchanged in a piece on a different topic, it says nothing; cut it.
+- Every sentence must add information. Delete sentences that are grammatically fine but contentless, such as restating the topic, gesturing at "the broader picture", or explaining why the obvious matters. If a sentence could sit unchanged in a piece on a different topic, it says nothing; cut it.
 - Answer the actual question. AI padding buries the substance under preamble and context nobody asked for (the recipe-site pattern: three paragraphs of story before the recipe). Lead with the answer, then support it.
 - No overwrought metaphors, no personifying objects, and never ride one metaphor through a whole piece.
 - No inoffensive both-sides waffle. If the source takes a position, keep it at full strength. Don't append token counterpoints ("that said, others may see it differently"), dilute it into "there are valid arguments on both sides", or close with "ultimately, it depends" / "it's a personal choice". Balance the writer never asked for is editorializing too.
@@ -74,7 +74,7 @@ Prefer the plain word: use not utilize, wrote not authored, moved not relocated,
 - Contractions (don't, it's) unless the tone is genuinely formal.
 
 ### Machine artifacts
-Delete on sight: unfilled placeholders ("[Name]", "[Company]", "2025-xx-xx"); citation debris (oaicite, contentReference, turn0search0, [cite: 1], grok_card and the like); tracking parameters (utm_source=chatgpt.com/openai/copilot.com, referrer=grok.com); knowledge-cutoff disclaimers ("as of my last update"); speculation dressed as fact ("details are not widely documented", "maintains a low profile"); assistant meta-talk ("Certainly!", "I hope this helps", "Would you like me to...", "You're absolutely right", "As an AI...", "Let me know if..."); reader flattery ("Great question!", "That's a really insightful observation", "You've hit the nail on the head"); repeatedly addressing the reader by first name; engagement-bait closing questions ("Are you approaching this from X or Y?"); canned self-assurances ("ensured a neutral, encyclopedic tone", "improved clarity while preserving the original meaning"). The overall tell is HR-polished friendliness — warmth that reads like it cleared three rounds of corporate approval. Real people are plainer.
+Delete on sight: unfilled placeholders ("[Name]", "[Company]", "2025-xx-xx"); citation debris (oaicite, contentReference, turn0search0, [cite: 1], grok_card and the like); tracking parameters (utm_source=chatgpt.com/openai/copilot.com, referrer=grok.com); knowledge-cutoff disclaimers ("as of my last update"); speculation dressed as fact ("details are not widely documented", "maintains a low profile"); assistant meta-talk ("Certainly!", "I hope this helps", "Would you like me to...", "You're absolutely right", "As an AI...", "Let me know if..."); reader flattery ("Great question!", "That's a really insightful observation", "You've hit the nail on the head"); repeatedly addressing the reader by first name; engagement-bait closing questions ("Are you approaching this from X or Y?"); canned self-assurances ("ensured a neutral, encyclopedic tone", "improved clarity while preserving the original meaning"). The overall tell is HR-polished friendliness that reads like it cleared three rounds of corporate approval. Real people are plainer.
 
 ## What NOT to strip
 
@@ -89,7 +89,7 @@ These are human speech, not slop:
 
 ## Warmth: plain isn't cold
 
-De-slopped text drifts toward curt and transactional. Don't let it — but don't manufacture feeling either. Fake warmth is worse than none.
+De-slopped text drifts toward curt and transactional. Don't let it, but don't manufacture feeling either. Fake warmth is worse than none.
 
 - **Keep the writer's emotion at full temperature.** If the source is excited, frustrated, grateful, or nervous, the output reads that way too. Flattening "I'm honestly so relieved this worked" into "The fix was successful" is as much a crime as inflating it.
 - **Keep the small relational moves a person would make** ("hope the move went okay", "no rush at all", "sorry to hear about X") when the source has them or the relationship obviously calls for one (an apology, condolences, asking a favor). These are register, not fabrication.
@@ -112,7 +112,7 @@ When the text asks someone for something:
 1. Scan for the tells above (vocabulary, structure, tone, formatting, artifacts).
 2. Identify the reader and match the register.
 3. Rewrite plainly, preserving the writer's exact meaning, certainty, emotion, and detail (Rule zero).
-   The universal test: say each sentence out loud in your head. If no real person would phrase it that way to another person — too polished, too staged, oddly constructed, PR-bot cadence — rewrite it the way you'd actually say it. This catches weird phrasing no specific rule lists.
+   The universal test: say each sentence out loud in your head. If no real person would phrase it that way to another person because it is too polished, too staged, oddly constructed, or has a PR-bot cadence, rewrite it the way you'd actually say it. This catches weird phrasing no specific rule lists.
 4. Final pass: sentences that say nothing, rule of three, -ing tails, parallelisms, short punchy openers on the piece or any paragraph, colon framing, same-length sentences, inflated or exit-less asks. Then the Rule zero test on every line.
 
 ## Examples

@@ -1,11 +1,11 @@
 ---
 name: excalidraw-render
-description: Use when asked to draw or diagram something - architecture, data flow, sequence, call chain, an ASCII sketch to clean up, or an existing .excalidraw to edit. Outputs an editable .excalidraw plus a PNG.
+description: Use when asked to draw or diagram something, such as architecture, data flow, sequence, call chain, an ASCII sketch to clean up, or an existing .excalidraw to edit. Outputs an editable .excalidraw plus a PNG.
 ---
 
 # Excalidraw Render Skill
 
-**Requires:** `npx` (Node) and network access on the first run, which fetches `@swiftlysingh/excalidraw-cli`. Also needs the ability to spawn a sub-agent — the cost model below depends on it. If sub-agents are unavailable in this harness, say so and offer to author the JSON directly at higher token cost rather than silently doing it.
+**Requires:** `npx` (Node) and network access on the first run, which fetches `@swiftlysingh/excalidraw-cli`. Also needs the ability to spawn a sub-agent because the cost model below depends on it. If sub-agents are unavailable in this harness, say so and offer to author the JSON directly at higher token cost rather than silently doing it.
 
 Make a polished Excalidraw diagram from a rough input, without baby-sitting. The main agent thinks in pixels (by looking at rendered PNGs); a Haiku sub-agent does the JSON work.
 
@@ -13,21 +13,21 @@ Make a polished Excalidraw diagram from a rough input, without baby-sitting. The
 
 ---
 
-## Core principle — cost discipline
+## Core principle: cost discipline
 
-A `.excalidraw` file is huge: a 10-box diagram is 3–5K tokens. Reading or editing it with the main model is wasteful and slow. Vision on a rendered PNG is far cheaper and far more accurate for layout judgment.
+A `.excalidraw` file is huge: a 10-box diagram is 3K to 5K tokens. Reading or editing it with the main model is wasteful and slow. Vision on a rendered PNG is far cheaper and far more accurate for layout judgment.
 
 **The main agent MUST:**
 - ✅ Read the rendered PNG to judge correctness (this is what vision is for)
-- ✅ Plan layouts up-front (positions, sizes, colors) — architectural judgment
+- ✅ Plan layouts up-front (positions, sizes, colors) as an architectural judgment
 - ✅ Critique specific visual issues from the PNG (overlaps, clipping, misalignment)
 - ✅ Dispatch surgical fix instructions to a Haiku sub-agent
 
 **The main agent MUST NOT:**
-- ❌ Read the `.excalidraw` JSON file — delegate to Haiku
-- ❌ Write the `.excalidraw` JSON inline — delegate to Haiku
-- ❌ Hand-edit the JSON — delegate to Haiku
-- ❌ Loop forever — hard cap at **3** render–critique cycles
+- ❌ Read the `.excalidraw` JSON file; delegate to Haiku
+- ❌ Write the `.excalidraw` JSON inline; delegate to Haiku
+- ❌ Hand-edit the JSON; delegate to Haiku
+- ❌ Loop forever; hard cap at **3** render and critique cycles
 
 ---
 
@@ -54,16 +54,16 @@ User input (ASCII / description / sketch)
 
 ---
 
-## Step 1 — Plan the layout (main agent)
+## Step 1: Plan the layout (main agent)
 
 Before any tool calls, decide:
 
-1. **Components** — what shapes (rectangles, diamonds, ellipses) and what each says
-2. **Layout family** — vertical flow, horizontal pipeline, hub-and-spoke, or 3-column data flow
-3. **Coordinates** — give every shape an exact `(x, y, width, height)` using the Sizing Rules
-4. **Colors** — pick from the palette by role
-5. **Connections** — list arrows as `(from_id → to_id, label, style)`
-6. **Zones / titles / annotations** — optional backgrounds, headers, side labels
+1. **Components:** what shapes (rectangles, diamonds, ellipses) and what each says
+2. **Layout family:** vertical flow, horizontal pipeline, hub-and-spoke, or 3-column data flow
+3. **Coordinates:** give every shape an exact `(x, y, width, height)` using the Sizing Rules
+4. **Colors:** pick from the palette by role
+5. **Connections:** list arrows as `(from_id → to_id, label, style)`
+6. **Zones / titles / annotations:** optional backgrounds, headers, side labels
 
 Write this as a plain-text **layout brief**. NOT JSON. Haiku will produce the JSON.
 
@@ -71,7 +71,7 @@ Write this as a plain-text **layout brief**. NOT JSON. Haiku will produce the JS
 
 ---
 
-## Step 2 — Hand off to Haiku to author the JSON
+## Step 2: Hand off to Haiku to author the JSON
 
 Spawn a sub-agent on the Haiku model. Pass it the layout brief, the output path, **and inline the Schema Cheat Sheet below** so it doesn't have to guess.
 
@@ -82,7 +82,7 @@ You are authoring a valid Excalidraw scene file. Output the complete JSON to:
   <ABS_PATH>/diagram.excalidraw
 
 # Layout brief
-<paste the brief from Step 1 — every shape with exact x/y/w/h, every arrow, every label>
+<paste the brief from Step 1, including every shape with exact x/y/w/h, every arrow, and every label>
 
 # Schema cheat sheet
 <paste the "Schema cheat sheet" section from this skill verbatim>
@@ -100,17 +100,17 @@ The main agent does NOT review the resulting JSON. Trust Haiku and move on to re
 
 ---
 
-## Step 3 — Render
+## Step 3: Render
 
 ```bash
 npx @swiftlysingh/excalidraw-cli convert <path>/diagram.excalidraw --format png -o <path>/diagram.png --scale 2
 ```
 
-No setup needed — `npx` handles installation on first run. Uses `@excalidraw/utils` under the hood (via jsdom + resvg-js), no headless browser required. If rendering fails for a large file, spawn a Haiku to summarize what's in the file (Haiku reads it, main agent never does) before fixing.
+No setup is needed because `npx` handles installation on first run. It uses `@excalidraw/utils` under the hood (via jsdom + resvg-js), with no headless browser required. If rendering fails for a large file, spawn a Haiku to summarize what's in the file (Haiku reads it, main agent never does) before fixing.
 
 ---
 
-## Step 4 — Look at the PNG and critique
+## Step 4: Look at the PNG and critique
 
 Read the PNG (image files render visually). Walk this checklist and write down concrete fixes in pixel / id terms:
 
@@ -125,11 +125,11 @@ Read the PNG (image files render visually). Walk this checklist and write down c
 | Wrong arrow target | Arrow points to wrong box | "Change arrow `<id>`'s `endBinding.elementId` from `X` to `Y`." |
 | Wrong color for role | DB shown blue, API green, etc. | "Recolor `<id>` to `bg=#b2f2bb stroke=#2f9e44` (Database role)." |
 
-**Main agent describes WHAT needs to change in pixel/id terms; Haiku reads the file and applies it.** Don't try to compute every coordinate yourself for more than 2-3 elements — let Haiku do bulk edits.
+**Main agent describes WHAT needs to change in pixel/id terms; Haiku reads the file and applies it.** Don't try to compute every coordinate yourself for more than 2-3 elements. Let Haiku do bulk edits.
 
 ---
 
-## Step 5 — Hand off fixes to Haiku
+## Step 5: Hand off fixes to Haiku
 
 **Sub-agent prompt template (fix):**
 
@@ -152,13 +152,13 @@ Apply ONLY these changes:
 - Output ONLY the path of the file you wrote. No commentary.
 ```
 
-Re-render and re-view. **Hard cap: 3 cycles total.** After cycle 3, present what you have and list any remaining issues explicitly. Don't loop more — the user can take it from there.
+Re-render and re-view. **Hard cap: 3 cycles total.** After cycle 3, present what you have and list any remaining issues explicitly. Don't loop more because the user can take it from there.
 
 ---
 
-## Step 6 — Present
+## Step 6: Present
 
-Give the user both paths — `diagram.excalidraw` (editable, drag into excalidraw.com) and `diagram.png` (the image) — and a two-line summary: what the diagram shows, plus any issue you couldn't resolve inside the cycle cap. Don't paste the JSON.
+Give the user both paths, `diagram.excalidraw` (editable, drag into excalidraw.com) and `diagram.png` (the image), plus a two-line summary of what the diagram shows and any issue you couldn't resolve inside the cycle cap. Don't paste the JSON.
 
 ---
 
@@ -267,7 +267,7 @@ Give the user both paths — `diagram.excalidraw` (editable, drag into excalidra
 | Decision / Gate | `#ffd8a8` | `#e8590c` |
 | Zone / Group | `#e9ecef` | `#868e96` |
 
-Same role → same color. Limit a diagram to **3–4 fill colors**.
+Same role → same color. Limit a diagram to **3 to 4 fill colors**.
 
 ---
 
@@ -277,20 +277,20 @@ The #1 cause of ugly diagrams is **cramping**. When unsure, double the gap.
 
 | Property | Value |
 |---|---|
-| Box width | 200–240px |
-| Box height | 80–120px (3–4 lines comfortable) |
-| Horizontal gap, **labeled** arrow | **150–200px** |
-| Horizontal gap, unlabeled arrow | 100–120px |
+| Box width | 200 to 240px |
+| Box height | 80 to 120px (3 to 4 lines comfortable) |
+| Horizontal gap, **labeled** arrow | **150 to 200px** |
+| Horizontal gap, unlabeled arrow | 100 to 120px |
 | Column pitch, labeled | 400px |
 | Column pitch, unlabeled | 340px |
-| Row pitch | 250–300px |
-| Font, body | 16–18px |
-| Font, title | 22–28px |
-| Font, annotations | 13–14px |
-| Zone padding around children | 50–60px on every side |
-| Zone opacity | 25–40 |
+| Row pitch | 250 to 300px |
+| Font, body | 16 to 18px |
+| Font, title | 22 to 28px |
+| Font, annotations | 13 to 14px |
+| Zone padding around children | 50 to 60px on every side |
+| Zone opacity | 25 to 40 |
 
-**Labeled-arrow visibility test:** if the label is more than half the gap between its two boxes, increase the gap. Common offenders: `"auto deploy"`, `"rollback on failure"`, `"All pass"` — these are 100–150px wide and clip below ~150px gap.
+**Labeled-arrow visibility test:** if the label is more than half the gap between its two boxes, increase the gap. Common offenders such as `"auto deploy"`, `"rollback on failure"`, and `"All pass"` are 100 to 150px wide and clip below ~150px gap.
 
 **Zone sizing rule:** `x = min(child_x) − 50`, `y = min(child_y) − 55`, `w = max(child_right) − x + 60`, `h = max(child_bottom) − y + 60`.
 
@@ -301,7 +301,7 @@ The #1 cause of ugly diagrams is **cramping**. When unsure, double the gap.
 - **Vertical flow** (default): top→bottom, multi-column. Use for layered architectures and request flows.
 - **Horizontal pipeline**: left→right, single row. Use for ETL, transforms.
 - **Hub-and-spoke**: central shape at center, others radial. Use for event buses, brokers.
-- **3-column data flow**: left = layer names (gray, x<0), center = flow boxes (x: 60–360), right = data-form annotations (orange, x: 570+). Use for parameter threading and call-chain traces.
+- **3-column data flow**: left = layer names (gray, x<0), center = flow boxes (x: 60 to 360), right = data-form annotations (orange, x: 570+). Use for parameter threading and call-chain traces.
 
 ---
 
@@ -316,5 +316,5 @@ The #1 cause of ugly diagrams is **cramping**. When unsure, double the gap.
 | Label drifted away from its shape after moving | When Haiku moves a shape, it must move the bound text element by the same delta |
 | Dropped detail from user's sample | The sample is the source of truth. Every label verbatim. Resize boxes. |
 | Same issue persists 3 cycles in a row | Stop. Present current PNG. List as open issue. Don't loop. |
-| Same fix applied twice with no effect | Try a different approach — wider gap, restructure — not the same fix harder. |
+| Same fix applied twice with no effect | Try a different approach, such as widening the gap or restructuring, instead of retrying the same fix harder. |
 | Mixed colors for the same role | One role → one color. Enforce on every iteration. |

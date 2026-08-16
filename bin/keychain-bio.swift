@@ -1,18 +1,20 @@
 import Foundation
 import Security
 import LocalAuthentication
+import Darwin
 
 let args = CommandLine.arguments
 
-guard args.count >= 3 else {
-    fputs("Usage: keychain-bio <store|get> <service> [value]\n", stderr)
+guard args.count >= 2 else {
+    fputs("Usage: keychain-bio <unlock|store|get> [service] [value]\n", stderr)
     exit(1)
 }
 
 let action = args[1]
-let service = args[2]
 let touchCacheFile = NSTemporaryDirectory() + "keychain-bio-touch-\(NSUserName())"
-let touchCacheIdleTimeout: TimeInterval = {
+let unlockLockFile = NSTemporaryDirectory() + "keychain-bio-unlock-\(NSUserName())"
+
+func touchCacheIdleTimeout() -> TimeInterval {
     let environment = ProcessInfo.processInfo.environment
     guard let value = environment["BWS_TOUCH_ID_IDLE_TIMEOUT_SECONDS"] else {
         return 300
@@ -22,7 +24,7 @@ let touchCacheIdleTimeout: TimeInterval = {
         exit(1)
     }
     return timeout
-}()
+}
 
 func updateTouchIDCache() {
     let fm = FileManager.default
@@ -40,17 +42,15 @@ func touchIDCacheValid() -> Bool {
           let modified = attrs[.modificationDate] as? Date else {
         return false
     }
-    guard Date().timeIntervalSince(modified) < touchCacheIdleTimeout else {
+    guard Date().timeIntervalSince(modified) < touchCacheIdleTimeout() else {
         return false
     }
     return true
 }
 
-func requireTouchID() {
-    if touchIDCacheValid() { return }
-
+func authenticate(reason: String) {
     let context = LAContext()
-    context.localizedReason = "Access \(service)"
+    context.localizedReason = reason
 
     var error: NSError?
     guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
@@ -61,7 +61,7 @@ func requireTouchID() {
     let semaphore = DispatchSemaphore(value: 0)
     var authSuccess = false
 
-    context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Access \(service)") { success, error in
+    context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, error in
         authSuccess = success
         if !success {
             fputs("Authentication failed: \(error?.localizedDescription ?? "unknown")\n", stderr)
@@ -71,7 +71,61 @@ func requireTouchID() {
 
     semaphore.wait()
     if !authSuccess { exit(1) }
+}
+
+func openUnlockLock() -> Int32 {
+    let descriptor = open(unlockLockFile, O_CREAT | O_RDWR | O_CLOEXEC, S_IRUSR | S_IWUSR)
+    guard descriptor != -1 else {
+        fputs("Failed to open unlock lock: \(String(cString: strerror(errno)))\n", stderr)
+        exit(1)
+    }
+    guard fchmod(descriptor, S_IRUSR | S_IWUSR) == 0 else {
+        fputs("Failed to secure unlock lock: \(String(cString: strerror(errno)))\n", stderr)
+        close(descriptor)
+        exit(1)
+    }
+    return descriptor
+}
+
+func unlockActive() -> Bool {
+    let descriptor = openUnlockLock()
+    defer { close(descriptor) }
+
+    if flock(descriptor, LOCK_EX | LOCK_NB) == 0 {
+        flock(descriptor, LOCK_UN)
+        return false
+    }
+    return errno == EWOULDBLOCK
+}
+
+enum AccessAuthorization {
+    case unlockLease
+    case touchIDCache
+}
+
+func authorizeAccess(service: String) -> AccessAuthorization {
+    if unlockActive() { return .unlockLease }
+    if touchIDCacheValid() { return .touchIDCache }
+
+    authenticate(reason: "Access \(service)")
     updateTouchIDCache()
+    return .touchIDCache
+}
+
+func unlock() -> Never {
+    authenticate(reason: "Unlock keychain-bio")
+
+    let descriptor = openUnlockLock()
+    guard flock(descriptor, LOCK_SH) == 0 else {
+        fputs("Failed to hold unlock lock: \(String(cString: strerror(errno)))\n", stderr)
+        close(descriptor)
+        exit(1)
+    }
+
+    fputs("Unlocked. Press Ctrl-C to lock.\n", stderr)
+    while true {
+        pause()
+    }
 }
 
 func store(service: String, value: String) {
@@ -98,7 +152,7 @@ func store(service: String, value: String) {
 }
 
 func get(service: String) {
-    requireTouchID()
+    let authorization = authorizeAccess(service: service)
 
     let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
@@ -115,7 +169,9 @@ func get(service: String) {
         exit(1)
     }
 
-    updateTouchIDCache()
+    if case .touchIDCache = authorization {
+        updateTouchIDCache()
+    }
 
     if let data = result as? Data, let value = String(data: data, encoding: .utf8) {
         print(value.trimmingCharacters(in: .whitespacesAndNewlines), terminator: "")
@@ -123,18 +179,24 @@ func get(service: String) {
 }
 
 switch action {
+case "unlock":
+    guard args.count == 2 else {
+        fputs("Usage: keychain-bio unlock\n", stderr)
+        exit(1)
+    }
+    unlock()
 case "store":
     guard args.count == 4 else {
         fputs("Usage: keychain-bio store <service> <value>\n", stderr)
         exit(1)
     }
-    store(service: service, value: args[3])
+    store(service: args[2], value: args[3])
 case "get":
     guard args.count == 3 else {
         fputs("Usage: keychain-bio get <service>\n", stderr)
         exit(1)
     }
-    get(service: service)
+    get(service: args[2])
 default:
     fputs("Unknown action: \(action)\n", stderr)
     exit(1)

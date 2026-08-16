@@ -1,11 +1,11 @@
 ---
 name: email-setup
-description: Use when mail isn't sending or the AWS SES/SMTP setup needs checking or changing - SES identities, regions, DKIM, MAIL FROM, sandbox limits, quotas, SMTP IAM users, or SMTP secrets in Kubernetes.
+description: Use when mail isn't sending or the AWS SES/SMTP setup needs checking or changing, including SES identities, regions, DKIM, MAIL FROM, sandbox limits, quotas, SMTP IAM users, or SMTP secrets in Kubernetes.
 ---
 
 # Email Setup
 
-**Requires:** `aws` CLI with a working profile, and `kubectl` with cluster context for the deployment checks. Credentials come from the Bitwarden helper — see the `bws-secrets` skill, and use it for anything involving a secret value. If a profile or cluster context is unavailable, say which check you couldn't run and fall back to the GitOps repo; don't guess at live state.
+**Requires:** `aws` CLI with a working profile, and `kubectl` with cluster context for the deployment checks. Credentials come from the Bitwarden helper. See the `bws-secrets` skill, and use it for anything involving a secret value. If a profile or cluster context is unavailable, say which check you couldn't run and fall back to the GitOps repo; don't guess at live state.
 
 Use live AWS and repository state as the source of truth. Do not assume profile names, account ownership, regions, identities, quotas, SMTP users, or deployed workloads from an old report.
 
@@ -13,7 +13,7 @@ Use live AWS and repository state as the source of truth. Do not assume profile 
 
 Discovery and diagnosis are the default, and they are read-only. Sending is an external side effect, so never use a test send as a health check.
 
-Anything that changes state — creating an IAM user, writing a secret, editing an ExternalSecret, rolling a deployment, revoking a key — happens only when the user explicitly asked for that change. Diagnosing a delivery failure does not authorize fixing it; report the cause and what the fix would be, then wait. Keep rotation work separate from a read-only investigation rather than folding it in.
+Anything that changes state, including creating an IAM user, writing a secret, editing an ExternalSecret, rolling a deployment, or revoking a key, happens only when the user explicitly asked for that change. Diagnosing a delivery failure does not authorize fixing it; report the cause and what the fix would be, then wait. Keep rotation work separate from a read-only investigation rather than folding it in.
 
 ## Discover the AWS CLI setup
 
@@ -126,9 +126,9 @@ Never dump Kubernetes Secret objects or environment variables into logs. If the 
 
 ## Credential and secret handling
 
-Storing and reading secrets is the `bws-secrets` skill's job — read it before touching a secret value, and use its commands rather than a variant invented here. The one rule worth repeating: a secret value must never be printed, echoed, logged, or written to an intermediate file. Stream it from `bws` into the consumer.
+Storing and reading secrets is the `bws-secrets` skill's job. Read it before touching a secret value, and use its commands rather than a variant invented here. The one rule worth repeating: a secret value must never be printed, echoed, logged, or written to an intermediate file. Stream it from `bws` into the consumer.
 
-What's specific to email: the SMTP username and password are two separate values, both region-bound, and they reach the cluster through an ExternalSecret rather than being read directly. Capture only the returned secret **ID** — that's what goes in the manifest.
+What's specific to email: the SMTP username and password are two separate values, both region-bound, and they reach the cluster through an ExternalSecret rather than being read directly. Capture only the returned secret **ID** because that is what goes in the manifest.
 
 After creating or selecting a secret, put its ID in the private GitOps change as the ExternalSecret `remoteRef.key`:
 
