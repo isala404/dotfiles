@@ -40,6 +40,12 @@ Default-deny is on everywhere, so this is a missing egress rule until proven oth
 
 If the app is new, check the **database's** NetworkPolicy too: it needs an ingress allow for the new namespace, and that omission looks like a hang, not a rejection.
 
+## Dev migrations fail after migration history was rewritten
+
+Dev database history is disposable when the operator has deliberately replaced, squashed, or edited existing test migrations and asks you to get the migration working. In that case, prefer a clean database over repairing the stale migration history: confirm the exact environment and logical database, explain that its data will be lost, get confirmation for the destructive operation, then drop and recreate only that database and let the migrator rebuild it from scratch.
+
+Never drop the database server or instance, its storage, another logical database, or anything outside dev. Stop if the target is ambiguous or shared, or if you cannot independently prove that it is the intended dev database.
+
 ## Certificates stop renewing
 
 Suspect the DNS provider API token first. It's synced by ExternalSecret into both cert-manager and external-dns, so both break together. Otherwise suspect propagation lag (5 to 10 min) or an ACME rate limit from retrying. Deleting the Certificate forces reissue, but only do that once you know the cause or you'll spend the remaining rate limit.
