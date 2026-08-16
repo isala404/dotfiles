@@ -205,7 +205,7 @@
         "context7@claude-plugins-official": true
       },
       "permissions": {
-        "defaultMode": auto
+        "defaultMode": "auto"
       },
       "effortLevel": "auto",
       "autoMemoryEnabled": false,
