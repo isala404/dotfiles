@@ -3,28 +3,30 @@
 Cilium is CNI *and* ingress. It replaces flannel, kube-proxy, traefik, and servicelb. None of those exist here, so don't reach for an Ingress resource or a NodePort.
 
 ```yaml
-gatewayAPI: {enabled: true}
-l2announcements: {enabled: true}
-kubeProxyReplacement: "true"
-ipam: {mode: kubernetes}
+gatewayAPI: {enabled: true, hostNetwork: {enabled: true}}
+l2announcements: {enabled: false}
+kubeProxyReplacement: true
 routingMode: native
+autoDirectNodeRoutes: true
+devices: [eth0]
 ```
 
 Namespace convention: app name = namespace name, `-dev` suffix for the dev copy. Resource pressure is low by design, so don't set aggressive limits on new deployments.
 
 ## The single address
 
-The LoadBalancer pool holds exactly one address, announced by ARP on the node's primary interface, and the Gateway Service owns it. No BGP, no MetalLB.
+There is no LoadBalancer at all. The Gateway's Envoy runs on the host network and binds the node's port 443 directly, so the Gateway's address is just the node's own public IP. No LB-IPAM pool, no L2 announcements, no BGP, no MetalLB, no cloud load balancer. The Gateway's own Service is a NodePort nobody uses.
 
-Consequence: **a second LoadBalancer Service will sit Pending forever.** That's the design. Everything ingresses through the one Gateway via HTTPRoute.
+**Never create a LoadBalancer Service here.** It isn't merely useless — Cilium would claim the node IP as a service VIP, and its datapath then drops every non-service port on that address, taking SSH and DNS down with it. Everything ingresses through the one Gateway via HTTPRoute.
 
 ```bash
-kubectl get ciliumloadbalancerippool     # expect Available=0, Used=1
+kubectl get gateway -n default -o wide   # ADDRESS should equal the node's IP
+kubectl get node -o wide                 # INTERNAL-IP is the public IP
 ```
 
 ## Gateway listeners
 
-One Gateway in `default`, with a **separate wildcard and apex listener per domain**. Each uses port 443, HTTPS, `Terminate`, routes allowed from all namespaces, and its own cert secret.
+One Gateway in `default`. **A wildcard and an apex hostname are always separate listeners**, and a domain carries only the listeners it actually needs — some have both, some only a wildcard, some only an apex plus one named subdomain. Each uses port 443, HTTPS, `Terminate`, routes allowed from all namespaces, and its own cert secret.
 
 Routes attach by `sectionName`, so it must name the listener whose hostname pattern actually covers the route. An apex hostname pointed at a wildcard listener silently fails to attach. Read the live listeners rather than guessing:
 

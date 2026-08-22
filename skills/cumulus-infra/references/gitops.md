@@ -9,11 +9,12 @@ apps/base/<app>/       namespace, deployment, service, network-policy,
                        image-automation, kustomization
 apps/prod/<app>/       kustomization (namespace: <app>), *.externalsecret.yaml,
                        httproute.yaml, pvc.yaml
-apps/dev/<app>/        kustomization (namespace: <app>-dev), dev secret IDs,
+apps/dev/<app>/        kustomization (namespace: <app>-dev), dev secret references,
                        deployment-patch.yaml, network-policy-patch.yaml
 
-infrastructure/core/     CNI, cert-manager, ESO, Longhorn, Reloader
-infrastructure/configs/  Gateway, ClusterIssuers, SecretStore, LB pool
+infrastructure/core/     CNI, cert-manager, ESO, Longhorn, block-storage CSI, Reloader
+infrastructure/configs/  Gateway, ClusterIssuers, SecretStore, namespaces,
+                         provider-token ExternalSecrets
 infrastructure/utils/    external-dns, registry, OIDC broker
 ```
 
@@ -25,7 +26,7 @@ Pushes land within ~10 minutes, or immediately with `flux reconcile`.
 
 Three resources per app in `apps/base/<app>/image-automation.yaml`: an ImageRepository scanning the registry path, an ImagePolicy selecting a tag, and an ImageUpdateAutomation committing the result back to the deployment branch.
 
-Policies filter `^prod-(?P<number>\d+)$` and order `numerical`, which pairs with CI tagging both prefixes by `github.run_id`; see `ci-cd.md`. A dev overlay wants the same policy against `^dev-(?P<number>\d+)$`; today only prod overlays are automated.
+Policies filter `^prod-(?P<number>\d+)$` and order `numerical`, which pairs with CI tagging both prefixes by `github.run_id`; see `ci-cd.md`. A dev overlay uses the same policy against `^dev-(?P<number>\d+)$`; both overlays are automated wherever a dev copy exists.
 
 **The filter has to match what the app's CI actually emits.** A workflow tagging releases with the git tag (`prod-v1.2.0`) matches a numeric filter zero times, and the symptom is silence rather than an error. Check the emitted scheme first whenever an image "isn't updating".
 

@@ -9,7 +9,7 @@ Multi-system Nix configuration for macOS and Linux machines.
 | `m1-wso2` | Darwin | isala | M1 Office Computer (WSO2) |
 | `m3-personal` | Darwin | supiri | M3 Personal Computer |
 
-## Project Structure
+## Project structure
 
 ```
 nix/
@@ -47,7 +47,7 @@ Install Nix with flakes enabled:
 curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 ```
 
-## Bootstrap (Fresh Install)
+## Bootstrap (fresh install)
 
 ### macOS (Darwin)
 
@@ -66,7 +66,7 @@ nix run nix-darwin --extra-experimental-features "nix-command flakes" -- switch 
 sudo nixos-rebuild switch --flake ~/dotfiles/nix#server-name
 ```
 
-## Update Configuration
+## Update configuration
 
 After making changes:
 
@@ -78,15 +78,15 @@ darwin-rebuild switch --flake ~/Projects/dotfiles/nix#<system-name>
 sudo nixos-rebuild switch --flake ~/dotfiles/nix#<system-name>
 ```
 
-## Update Flake Inputs
+## Update flake inputs
 
 ```bash
 nix flake update --flake ~/Projects/dotfiles/nix
 ```
 
-## Adding a New Machine
+## Adding a new machine
 
-### New macOS Machine
+### New macOS machine
 
 1. Create host config: `nix/hosts/darwin/<hostname>.nix`
    ```nix
@@ -133,32 +133,36 @@ nix flake update --flake ~/Projects/dotfiles/nix
    };
    ```
 
-### New Linux Server
+### New Linux server
 
 1. Copy template: `cp nix/hosts/nixos/_template.nix nix/hosts/nixos/<hostname>.nix`
 2. Customize the configuration
 3. Create home config if needed
 4. Add to `flake.nix` under `nixosConfigurations`
 
-## What's Included
+## What's included
 
-### Shared (All Machines)
+### Shared (all machines)
 - Fish shell with Starship prompt
 - Git with useful aliases
 - Nix flakes enabled
 - Common dev tools: vim, ripgrep, jq, yq
 
-### macOS Specific
+### macOS specific
 - Touch ID for sudo
 - Homebrew integration
 - Nerd Fonts
 - App aliases in /Applications
 
-### Linux Specific
+### Linux specific
 - SSH server (key-only)
 - Basic firewall
 - Common server tools
 
-## Backup Before Formatting
+## Secret management
+
+`secretctl` provides a policy-enforcing frontend for Bitwarden Secrets Manager on macOS and Linux. A root-owned, data-driven config controls which operations agents may run automatically. macOS also supports temporary Touch ID-authorized full access; headless Linux hosts fail closed for operations outside the allowlist. See [nix/secretctl/README.md](./nix/secretctl/README.md) for setup and usage.
+
+## Backup before formatting
 
 See [BACKUP_BEFORE_FORMAT.md](./BACKUP_BEFORE_FORMAT.md) for the backup checklist.

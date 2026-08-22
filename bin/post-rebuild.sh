@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Resolve the real checkout path (pwd -P follows symlinks) so this works whether
-# invoked directly or via the ~/.dotfiles symlink — and never points it at itself.
+# invoked directly or via the ~/.dotfiles symlink, and never points it at itself.
 DOTFILES_DIR="$(cd "$(dirname "$0")/.." && pwd -P)"
 
 # Stable, location-agnostic handle to this checkout. Nix configs and the

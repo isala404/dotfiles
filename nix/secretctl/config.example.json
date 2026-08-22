@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "backends": {
+    "bws": {
+      "type": "bws",
+      "organizationId": "ORGANIZATION_ID"
+    }
+  },
+  "vaults": {
+    "example": {
+      "backend": "bws",
+      "remoteId": "PROJECT_ID",
+      "allow": [
+        "list",
+        "reveal",
+        "create",
+        "update",
+        "delete"
+      ]
+    }
+  }
+}

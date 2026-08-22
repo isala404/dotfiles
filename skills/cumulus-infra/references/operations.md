@@ -2,7 +2,9 @@
 
 ## Storage: one replica on one box
 
-Longhorn is the default StorageClass at `defaultReplicaCount: 1`, with data under `/var/lib/longhorn` on the node's own disk. There is no second replica and no second node, so **the off-box backup is the only real redundancy.** Never delete a production volume without explicit approval.
+Longhorn runs at `defaultReplicaCount: 1`, with data under `/var/lib/longhorn` on the node's own disk. There is no second replica and no second node, so **the off-box backup is the only real redundancy.** Never delete a production volume without explicit approval.
+
+Two StorageClasses are both marked default, k3s's `local-path` and `longhorn`, so a PVC that names neither is a coin flip. Always set `storageClassName`; run `kubectl get sc` to see what exists. A third class, backed by the host provider's block-storage CSI driver, is deliberately not default and exists for volumes that should outlive the node.
 
 Volumes expand online, so start small:
 
@@ -14,14 +16,16 @@ kubectl patch pvc <name> -n <ns> -p '{"spec":{"resources":{"requests":{"storage"
 
 Two RecurringJobs in `infrastructure/core/longhorn/recurring-jobs.yaml`, both `task: backup`, both writing to S3-compatible object storage:
 
-| Job | Cron (UTC) | Retains |
-|-----|-----------|---------|
-| `daily-backup` | `0 2 * * *` | 7 |
-| `weekly-backup` | `0 3 * * 0` | 4 |
+| Job | Cron in the manifest | Fires at | Retains |
+|-----|---------------------|----------|---------|
+| `daily-backup` | `30 7 * * *` | 02:00 UTC daily | 7 |
+| `weekly-backup` | `30 8 * * 0` | 03:00 UTC Sunday | 4 |
+
+The cron strings are offset by the cluster's UTC+05:30 locale, so they don't read as the UTC times they produce. Check an actual `Backup` timestamp before concluding a schedule is wrong.
 
 **There is no snapshot job.** Nothing runs hourly, and nothing is kept locally on purpose. So the worst-case recovery point is roughly 24 hours. Whatever happened since 02:00 UTC is gone with the disk. State that plainly when someone asks what an outage costs; don't imply finer granularity than exists.
 
-The target and its credentials are set in two places that must agree: `backupTarget` / `backupTargetCredentialSecret` in the Helm values, and a `BackupTarget` resource with the matching `backupTargetURL` and `credentialSecret`. The credential secret itself arrives by ExternalSecret from Bitwarden.
+The target and its credentials are set in two places that must agree: `backupTarget` / `backupTargetCredentialSecret` in the Helm values, and a `BackupTarget` resource with the matching `backupTargetURL` and `credentialSecret`. The credential secret itself arrives through an ExternalSecret.
 
 Longhorn reads the target at startup, so **an empty `backupTargetURL` almost always means the credentials hadn't synced when Longhorn came up**. Check the ExternalSecret first, then restart the manager rather than editing settings by hand.
 
@@ -33,7 +37,7 @@ kubectl get volume.longhorn.io -n longhorn -o custom-columns=\
 NAME:.metadata.name,LABELS:.metadata.labels
 kubectl get backup -n longhorn --sort-by='.metadata.creationTimestamp' | tail -10
 kubectl get backupvolume -n longhorn
-kubectl get setting backup-target -n longhorn -o jsonpath='{.value}'
+kubectl get backuptarget default -n longhorn -o custom-columns=URL:.spec.backupTargetURL,AVAIL:.status.available
 ```
 
 A new volume with no job label is silently unprotected. Check this whenever you add a stateful app.
@@ -54,7 +58,7 @@ If the PVC was deleted but the Longhorn volume survives, you can skip the restor
 
 1. Provision a fresh server, install k3s with the same disable flags.
 2. Bootstrap Flux against the deployment branch. It rebuilds every namespace, workload, and policy from git.
-3. ESO re-pulls every secret from Bitwarden because none of them were on the node.
+3. ESO re-pulls every secret from the configured provider because none of them were on the node.
 4. Point Longhorn at the same backup target and restore volumes from object storage.
 5. DNS and certificates re-provision themselves once the Gateway is up.
 
@@ -64,12 +68,13 @@ The recovery point is the last successful backup, not the moment of failure. Reh
 
 Single node, so every upgrade is downtime. Say so before starting.
 
-The operator runs the installer over SSH. **The disable flags must be repeated every time** because dropping one re-enables a component Cilium already provides and breaks networking:
+The operator runs the installer over SSH. **Every flag on the current unit must be repeated**, because dropping one re-enables a component Cilium already provides and breaks networking, and the installer does not carry the old arguments forward. Read them off the running server rather than retyping a remembered list:
 
 ```bash
-curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="<version>" sh -s - \
-  --flannel-backend=none --disable-network-policy --disable=traefik --disable=servicelb
+sudo sed -n '/ExecStart=/,/^$/p' /etc/systemd/system/k3s.service
 ```
+
+Expect more than the obvious four: alongside the disables for the flannel backend, the network policy controller, traefik, and servicelb, there is a separate flag disabling kube-proxy, plus TLS SANs and kubelet and controller tuning that are just as load-bearing.
 
 Rollback is the same installer with the previous version; the datastore under `/var/lib/rancher/k3s/server/db/` is preserved. Afterwards, verify with a real HTTPS request from outside the cluster, not just pod status.
 

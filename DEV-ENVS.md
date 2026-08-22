@@ -1,8 +1,8 @@
-# Dev Environments
+# Dev environments
 
 Per-project dev environments using nix flakes + direnv. Tools activate automatically when you `cd` into a project and deactivate when you leave.
 
-## Quick Start
+## Quick start
 
 1. Copy a template into your project:
 ```bash
@@ -17,7 +17,7 @@ direnv allow
 
 That's it. The environment activates on `cd`.
 
-## Available Templates
+## Available templates
 
 | Template | What you get |
 |----------|-------------|
@@ -45,7 +45,7 @@ Then reload:
 direnv reload
 ```
 
-## Adding Environment Variables
+## Adding environment variables
 
 ```nix
 default = pkgs.mkShell {
@@ -61,7 +61,7 @@ default = pkgs.mkShell {
 };
 ```
 
-## Combining Languages
+## Combining languages
 
 Just add packages from multiple ecosystems:
 
@@ -87,7 +87,7 @@ inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
 Run `nix flake update` to bump the lock file.
 
-## Rust with Extra Targets
+## Rust with extra targets
 
 The rust template uses `rust-overlay` for flexible toolchain control:
 
@@ -98,7 +98,7 @@ The rust template uses `rust-overlay` for flexible toolchain control:
 })
 ```
 
-## How It Works
+## How it works
 
 - `flake.nix` declares the tools your project needs
 - `flake.lock` pins exact versions (commit to git for reproducibility)

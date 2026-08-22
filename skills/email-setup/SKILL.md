@@ -3,7 +3,7 @@ name: email-setup
 description: Use when mail isn't sending or the AWS SES/SMTP setup needs checking or changing, including SES identities, regions, DKIM, MAIL FROM, sandbox limits, quotas, SMTP IAM users, or SMTP secrets in Kubernetes.
 ---
 
-# Email Setup
+# Email setup
 
 **Requires:** `aws` CLI with a working profile, and `kubectl` with cluster context for the deployment checks. Credentials come from the Bitwarden helper. See the `bws-secrets` skill, and use it for anything involving a secret value. If a profile or cluster context is unavailable, say which check you couldn't run and fall back to the GitOps repo; don't guess at live state.
 
@@ -126,7 +126,7 @@ Never dump Kubernetes Secret objects or environment variables into logs. If the 
 
 ## Credential and secret handling
 
-Storing and reading secrets is the `bws-secrets` skill's job. Read it before touching a secret value, and use its commands rather than a variant invented here. The one rule worth repeating: a secret value must never be printed, echoed, logged, or written to an intermediate file. Stream it from `bws` into the consumer.
+Storing and reading secrets is the `bws-secrets` skill's job. Read it before touching a secret value, and use its commands rather than a variant invented here. The one rule worth repeating: a secret value must never be printed, echoed, logged, or written to an intermediate file. Stream it from `secretctl` into the consumer.
 
 What's specific to email: the SMTP username and password are two separate values, both region-bound, and they reach the cluster through an ExternalSecret rather than being read directly. Capture only the returned secret **ID** because that is what goes in the manifest.
 

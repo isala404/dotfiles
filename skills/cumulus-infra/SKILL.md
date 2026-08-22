@@ -3,24 +3,26 @@ name: cumulus-infra
 description: Use when working on the cumulus k3s cluster, including kubectl, pods, deployments, GitOps and Flux changes, ingress, DNS, certs, Longhorn storage, the registry and CI, or debugging why something is down.
 ---
 
-# Cumulus Infrastructure
+# Cumulus infrastructure
 
-A single k3s node on a Hetzner cloud server. Cilium is CNI *and* ingress via Gateway API. FluxCD drives GitOps and image automation. Longhorn stores state at one replica, backed up off-box to S3-compatible object storage. External Secrets Operator pulls from Bitwarden; Reloader restarts on change. cert-manager and external-dns handle TLS and records automatically. Images come from a self-hosted registry that CI authenticates to by OIDC.
+A single k3s node on one rented cloud VM. Cilium is CNI *and* ingress via Gateway API, with the Gateway's Envoy on the host network. FluxCD drives GitOps and image automation. Longhorn stores state at one replica, backed up off-box to S3-compatible object storage. External Secrets Operator pulls from the configured secret provider; Reloader restarts on change. cert-manager and external-dns handle TLS and records automatically. Images come from a self-hosted registry that CI authenticates to by OIDC.
 
 Being one rented VM shapes most of the decisions below: no HA, one public address, and object storage as the only thing that survives losing the box.
 
 **This skill holds what's true because of how this cluster is built**, not general Kubernetes knowledge. Assume you already know the rest.
 
-Domains, namespaces, versions, and secret IDs are deliberately absent. They're in the repo's `CLAUDE.md`, or discover them:
+Domains, namespaces, and versions are deliberately absent. They're in the repo's `CLAUDE.md`, or discover them:
 
 ```bash
 kubectl get gateway -A -o wide
 kubectl get ns
 ```
 
-## Rule zero: don't spill secrets
+## Rule zero: use the right secret skill
 
-Read `references/secrets.md` before anything involving secrets, `.env` files, credentials, or ExternalSecrets. Short version: you may pipe a value into a command, you may not print one. This cluster's secrets are never displayed; dev and throwaway credentials the operator hands you are workable material.
+When a task involves BWS, Bitwarden, or provider-side credential retrieval, creation, or rotation, use the `bws-secrets` skill first. It owns credential access and handling; do not reproduce its commands or policies here.
+
+For Kubernetes Secret objects, ExternalSecrets, or secret-sync behavior, read `references/secrets.md`. Never display a cluster-managed secret value.
 
 ## Rule one: always pass `--context polaris-v2`
 
@@ -32,13 +34,13 @@ kubectl --context polaris-v2 get pods -A
 
 Confirm it's the one you think with `kubectl config get-contexts`.
 
-Auth is an exec credential plugin behind a biometric-unlocked keychain, cached about an hour. You cannot re-auth non-interactively; when it expires, ask the operator to unlock.
+Auth is an exec credential plugin: kubectl shells out to `~/.kube/bws-credential-helper.sh`, which streams the kubeconfig out of the secret store and hands back client certs. It needs no prompt and no unlock, so kubectl works unattended. If it starts failing, the store is the thing to check, not the operator — see the `bws-secrets` skill.
 
 ## References
 
 | Task | Load |
 |------|------|
-| Anything secret-shaped | `secrets.md` |
+| Kubernetes secrets and ExternalSecrets | `secrets.md` |
 | Routing, DNS, TLS, network policy | `platform.md` |
 | Manifests, image automation, adding an app | `gitops.md` |
 | Build pipelines, dev vs prod images, registry auth | `ci-cd.md` |

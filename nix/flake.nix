@@ -138,6 +138,14 @@
       # =============================================
       # Expose packages for convenience
       # =============================================
+      packages.aarch64-darwin.secretctl =
+        nixpkgs.legacyPackages.aarch64-darwin.callPackage ./pkgs/secretctl.nix
+          { };
+
+      packages.aarch64-linux.secretctl =
+        nixpkgs.legacyPackages.aarch64-linux.callPackage ./pkgs/secretctl.nix
+          { };
+
       darwinPackages = self.darwinConfigurations."m1-wso2".pkgs;
     };
 }

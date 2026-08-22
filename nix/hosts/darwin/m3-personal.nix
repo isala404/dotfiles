@@ -6,9 +6,48 @@
 let
   # Derive paths from config so no machine-specific tree is hardcoded in source.
   # `~/.dotfiles` is a symlink to the real checkout, created at runtime by
-  # post-rebuild.sh — the actual location never appears in tracked source.
+  # post-rebuild.sh. The actual location never appears in tracked source.
   homeDir = config.users.users.${config.system.primaryUser}.home;
   dotfilesDir = "${homeDir}/.dotfiles";
+  secretctl = pkgs.callPackage ../../pkgs/secretctl.nix { };
+  secretctlConfig = {
+    version = 2;
+    backends.bws = {
+      type = "bws";
+      organizationId = "83b6cb49-2ec0-4faf-93d1-b42200e217b2";
+    };
+    vaults = {
+      agents = {
+        backend = "bws";
+        remoteId = "98c2096a-b998-4b7e-9897-b42200f39c96";
+        allow = [
+          "list"
+          "reveal"
+          "create"
+          "update"
+          "delete"
+        ];
+      };
+      k8s = {
+        backend = "bws";
+        remoteId = "305a7f76-5722-4683-9c69-b42200f3a9c5";
+        allow = [
+          "list"
+          "create"
+          "update"
+        ];
+      };
+      personal = {
+        backend = "bws";
+        remoteId = "bd020bcd-d297-4f04-a1a6-b42200f390f2";
+        allow = [
+          "list"
+          "reveal"
+          "create"
+        ];
+      };
+    };
+  };
 in
 {
   imports = [
@@ -17,7 +56,7 @@ in
 
   # This machine's rebuild shortcut (kept here, not in the shared module).
   environment.shellAliases.sync-m3 =
-    "sudo darwin-rebuild switch --flake ${dotfilesDir}/nix#m3-personal && ${dotfilesDir}/bin/post-rebuild.sh";
+    "sudo darwin-rebuild switch --flake path:${dotfilesDir}/nix#m3-personal && ${dotfilesDir}/bin/post-rebuild.sh";
 
   # =============================================
   # Additional Packages for Personal Machine
@@ -54,6 +93,7 @@ in
     cmake
     gnupg
     imagemagick
+    secretctl
 
     # ─────────────────────────────────────────
     # Cross-compilation (zig as CC/CXX for linux-amd64)
@@ -71,6 +111,10 @@ in
     ANDROID_HOME = "$HOME/Library/Android/sdk";
     ANDROID_SDK_ROOT = "$HOME/Library/Android/sdk";
   };
+
+  # The installed policy is readable by agents but can only be changed by a
+  # privileged nix-darwin activation.
+  environment.etc."secretctl/config.json".text = builtins.toJSON secretctlConfig;
 
   # =============================================
   # Fish Shell - Personal paths and tools
@@ -114,16 +158,10 @@ in
       kubens (kubens | fzf)
     end
 
-    # BWS wrapper: fetch token from keychain with Touch ID gate
-    function bws
-      set -lx BWS_ACCESS_TOKEN (~/.local/bin/keychain-bio get bws-access-token)
-      command bws $argv
-    end
-
     # Sync system config
     function sync
       echo "Syncing nix-darwin config..."
-      sudo darwin-rebuild switch --flake ${dotfilesDir}/nix#m3-personal
+      sudo darwin-rebuild switch --flake path:${dotfilesDir}/nix#m3-personal
     end
   '';
 
@@ -187,21 +225,14 @@ in
   };
 
   # =============================================
-  # M3-specific activation (keychain-bio, credential helpers, Time Machine)
+  # M3-specific activation (credential helpers, Time Machine)
   # =============================================
   system.activationScripts.extraActivation.text = ''
-    # Compile and install keychain-bio (Touch ID gated keychain access).
-    # Sources are referenced as nix store paths so no checkout location leaks.
-    echo "Building keychain-bio..." >&2
-    mkdir -p ${homeDir}/.local/bin
-    swiftc -O -o ${homeDir}/.local/bin/keychain-bio ${../../../bin/keychain-bio.swift} \
-      -framework Security -framework LocalAuthentication 2>&1 | logger -t keychain-bio || true
+    # Install secretctl credential helpers.
+    install -m 755 ${secretctl}/libexec/secretctl/aws-credential-helper ${homeDir}/.aws/bws-credential-helper.sh 2>/dev/null || true
+    install -m 755 ${secretctl}/libexec/secretctl/kube-credential-helper ${homeDir}/.kube/bws-credential-helper.sh 2>/dev/null || true
 
-    # Install BWS credential helpers
-    install -m 755 ${../../../bin/bws/aws-credential-helper.sh} ${homeDir}/.aws/bws-credential-helper.sh 2>/dev/null || true
-    install -m 755 ${../../../bin/bws/kube-credential-helper.sh} ${homeDir}/.kube/bws-credential-helper.sh 2>/dev/null || true
-
-    # Time Machine exclusions — skip reproducible/cacheable data
+    # Time Machine exclusions: skip reproducible/cacheable data
     echo "Configuring Time Machine exclusions..." >&2
     for dir in \
       /nix \
@@ -257,7 +288,7 @@ in
     script = ''
       export PATH="/run/current-system/sw/bin:/nix/var/nix/profiles/default/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-      darwin-rebuild switch --flake ${dotfilesDir}/nix#m3-personal 2>&1 | logger -t nix-sync
+      darwin-rebuild switch --flake path:${dotfilesDir}/nix#m3-personal 2>&1 | logger -t nix-sync
       sudo -u ${config.system.primaryUser} /bin/sh -lc 'bunx skills add https://github.com/isala404/dotfiles/tree/main/skills -g --agent claude-code codex -y' 2>&1 | logger -t nix-sync
     '';
     serviceConfig = {

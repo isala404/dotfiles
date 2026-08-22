@@ -22,9 +22,9 @@ Expected. The registry's GC prunes nightly and keeps only the two most recent ta
 
 Records are proxied by the CDN, so DNS never returns the node. Not a fault. New routes also need a minute or two for external-dns to publish before anything resolves at all.
 
-## A second LoadBalancer Service stays Pending forever
+## A LoadBalancer Service stays Pending forever
 
-The address pool holds exactly one address and the Gateway Service owns it. This is the design, not a bug. Route through the Gateway with an HTTPRoute instead.
+Expected: LB-IPAM has no pools and there is no cloud load balancer, so nothing can ever assign an address. Leave it Pending and route through the Gateway with an HTTPRoute instead. Do not "fix" it by adding a pool holding the node IP — Cilium would claim that IP as a service VIP and its datapath would drop every non-service port on it, SSH and DNS included.
 
 ## HTTPRoute not accepted
 
@@ -56,7 +56,7 @@ Single replica rebuilding. Wait. Backup failures, separately, are usually the ob
 
 ## kubectl auth fails
 
-You cannot fix this. "Unable to connect" is the cached credential expiring, and re-auth is biometric, so the operator has to do it. "Certificate signed by unknown authority" means the cached kubeconfig is corrupt: clear the credential cache, then they re-auth.
+The exec plugin (`~/.kube/bws-credential-helper.sh`) pulls the kubeconfig from the secret store on every call, so this is a secret-store problem, not an expiry. Run the helper's underlying `secretctl` check from the `bws-secrets` skill: a policy denial, a missing backend token, or a stale cached value all surface here. `secretctl reveal --no-cache` past a stale cache; anything else needs the operator.
 
 ## Flux stopped reconciling
 

@@ -3,7 +3,7 @@ name: excalidraw-render
 description: Use when asked to draw or diagram something, such as architecture, data flow, sequence, call chain, an ASCII sketch to clean up, or an existing .excalidraw to edit. Outputs an editable .excalidraw plus a PNG.
 ---
 
-# Excalidraw Render Skill
+# Excalidraw render skill
 
 **Requires:** `npx` (Node) and network access on the first run, which fetches `@swiftlysingh/excalidraw-cli`. Also needs the ability to spawn a sub-agent because the cost model below depends on it. If sub-agents are unavailable in this harness, say so and offer to author the JSON directly at higher token cost rather than silently doing it.
 

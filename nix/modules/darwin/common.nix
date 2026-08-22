@@ -5,6 +5,14 @@
 let
   # Resolve the primary user's home from config instead of hardcoding a path.
   homeDir = config.users.users.${config.system.primaryUser}.home;
+  # curl-cffi 0.15.0 has a broken Darwin rpath in the current nixpkgs pin.
+  # yt-dlp falls back to requests when this optional dependency is absent.
+  ytDlp = pkgs.yt-dlp.overridePythonAttrs (old: {
+    dependencies = builtins.filter (dependency: (dependency.pname or "") != "curl-cffi") old.dependencies;
+    optional-dependencies = old.optional-dependencies // {
+      curl-cffi = [ ];
+    };
+  });
 in
 {
   # Allow unfree packages
@@ -110,12 +118,11 @@ in
     grype # vulnerability scanner
     cosign # container signing
     dive # explore docker image layers
-    bws # Bitwarden Secrets Manager CLI
 
     # ─────────────────────────────────────────
     # Media
     # ─────────────────────────────────────────
-    yt-dlp
+    ytDlp
     ffmpeg
 
     # ─────────────────────────────────────────
@@ -161,7 +168,7 @@ in
   # =============================================
   environment.shellAliases = {
     # Modern CLI replacements
-    # cat is left as the system default on purpose — bat's formatted output
+    # cat is left as the system default on purpose. Bat's formatted output
     # breaks copy/paste of file contents. Use `bat` explicitly when you want it.
     ls = "eza --icons --group-directories-first";
     ll = "eza -la --icons --group-directories-first --git";
