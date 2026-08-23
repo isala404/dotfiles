@@ -195,14 +195,8 @@ in
 
     casks = [
       # Development
-      "cursor"
-      "zed"
       "ghostty"
       "orbstack"
-      "t3-code"
-      "android-studio"
-      "android-commandlinetools"
-      "temurin"
 
       # Communication
       "whatsapp"
@@ -211,9 +205,7 @@ in
       "steipete/tap/codexbar"
 
       # Utilities
-      "capcut"
       "macs-fan-control"
-      "transmission"
       "google-drive"
 
       # Network & Security

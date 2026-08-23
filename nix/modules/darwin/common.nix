@@ -349,8 +349,6 @@ in
 
       # Development
       "visual-studio-code"
-      "dbeaver-community"
-      "postman"
       "claude"
       "codex" # OpenAI coding agent (CLI)
       "codex-app" # OpenAI Codex desktop app
@@ -363,7 +361,6 @@ in
 
       # Media
       "vlc"
-      "obs"
 
       # Security
       "bitwarden"

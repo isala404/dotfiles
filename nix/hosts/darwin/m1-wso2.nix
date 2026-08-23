@@ -70,7 +70,6 @@ in
   # =============================================
   homebrew = {
     brews = [
-      "jmeter" # Performance testing
       "llama.cpp" # Local LLM inference
     ];
 
