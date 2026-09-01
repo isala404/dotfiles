@@ -340,7 +340,6 @@ in
 
     brews = [
       "mas" # Mac App Store CLI
-      "opencode" # AI coding assistant
     ];
 
     casks = [
@@ -377,6 +376,23 @@ in
     softwareupdate --install-rosetta --agree-to-license
     echo "Setting fish as default shell for ${config.system.primaryUser}..." >&2
     dscl . -create ${homeDir} UserShell /run/current-system/sw/bin/fish
+
+    # Determinate owns the daemon, so nix.settings is unavailable and this has
+    # to be pinned directly in the daemon's config. Without it the store
+    # accumulates byte-identical copies; it was holding 1.1 GiB of them before
+    # the first manual `nix store optimise`. Takes effect on the next daemon
+    # start, so it is deliberately not kickstarted from inside activation.
+    # nix.conf is last-wins and the Determinate installer rewrites this file on
+    # upgrade, so check the line is both present and unique -- a stale
+    # "= false" landing after ours would otherwise silently win.
+    nixConf=/etc/nix/nix.custom.conf
+    [ -f "$nixConf" ] || : > "$nixConf"
+    if ! grep -qx "auto-optimise-store = true" "$nixConf" \
+       || [ "$(grep -c "^[[:space:]]*auto-optimise-store[[:space:]]*=" "$nixConf")" -ne 1 ]; then
+      echo "Pinning auto-optimise-store in $nixConf..." >&2
+      sed -i "" "/^[[:space:]]*auto-optimise-store[[:space:]]*=/d" "$nixConf"
+      printf "auto-optimise-store = true\n" >> "$nixConf"
+    fi
   '';
 
   # =============================================

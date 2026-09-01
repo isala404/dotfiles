@@ -1,0 +1,5 @@
+prefix_rule(pattern=["make"], decision="allow")
+prefix_rule(pattern=["gh"], decision="allow")
+prefix_rule(pattern=["just"], decision="allow")
+prefix_rule(pattern=["kubectl"], decision="allow")
+prefix_rule(pattern=["secretctl"], decision="allow")

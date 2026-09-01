@@ -1,4 +1,4 @@
-# Editor configurations (VS Code, Cursor, Zed, Alacritty)
+# Editor configurations (VS Code, Zed, Alacritty)
 # Enhanced with better settings for platform engineers
 {
   pkgs,
@@ -224,7 +224,7 @@
   # - git-firefly (enhanced git integration)
 
   # =============================================
-  # VS Code / Cursor Terminal Configuration
+  # VS Code Terminal Configuration
   # =============================================
   home.activation.configureVSCodeFish = config.lib.dag.entryAfter [ "writeBoundary" ] ''
     update_settings() {
@@ -263,7 +263,6 @@
       echo "Updated settings in $settings_file"
     }
 
-    update_settings "$HOME/Library/Application Support/Cursor/User/settings.json"
     update_settings "$HOME/Library/Application Support/Code/User/settings.json"
   '';
 }

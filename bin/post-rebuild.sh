@@ -29,6 +29,10 @@ for target in "${targets[@]}"; do
   cp "$agents_src" "$target"
 done
 
+# Codex user rules
+mkdir -p "$HOME/.codex/rules"
+cp "$DOTFILES_DIR/workflows/base/isala.rules" "$HOME/.codex/rules/isala.rules"
+
 # Sync per-project agent docs: AGENTS.md is the synced file, CLAUDE.md is a symlink to it.
 # A sibling AGENTS.<LocalHostName>.md overlay, if present, is appended for that host only.
 sync_project_agents() {
