@@ -1,6 +1,7 @@
 ---
 name: excalidraw-render
-description: Use when asked to draw or diagram something, such as architecture, data flow, sequence, call chain, an ASCII sketch to clean up, or an existing .excalidraw to edit. Outputs an editable .excalidraw plus a PNG.
+description: Draw a diagram as an editable .excalidraw plus a PNG.
+disable-model-invocation: false
 ---
 
 # Excalidraw render skill

@@ -1,6 +1,7 @@
 ---
 name: humanize
-description: Use when asked to humanize or de-slop text, or to rewrite anything that reads robotic, corporate, or AI-written. Covers posts, emails, messages, docs, and PR prose.
+description: Rewrite text that reads robotic, corporate, or AI-written.
+disable-model-invocation: false
 ---
 
 # Humanize
