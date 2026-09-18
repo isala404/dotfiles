@@ -41,22 +41,25 @@ kubectl create secret generic <name> -n <ns> --from-env-file=.env \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-For a provider-backed secret, update the provider through `bws-secrets`, then force the sync. Reloader restarts the pods on its own:
+For a provider-backed secret, update the provider through `bws-secrets`, then force the sync and roll the consumers yourself:
 
 ```bash
 kubectl annotate externalsecret <name> -n <ns> force-sync=$(date +%s) --overwrite
+kubectl rollout restart deploy/<name> -n <ns>
 ```
+
+**There is no Reloader in this cluster.** A synced Secret does not restart anything, so a rotated credential sits unused until the pods are replaced. This is the single most common way a rotation looks finished and isn't.
 
 ## How provider-backed secrets reach pods
 
 ```
 Configured secret provider -> sdk-server (external-secrets ns, mTLS) -> ClusterSecretStore
-  -> ExternalSecret (app ns) -> Secret -> Reloader rolls the pods
+  -> ExternalSecret (app ns) -> Secret -> you restart the pods
 ```
 
 - The store is cluster-scoped; any namespace can reference it.
 - `creationPolicy: Owner` means deleting the ExternalSecret deletes the Secret, and hand-edits are overwritten on the next sync. Never patch an Owner-managed Secret to fix something.
-- The 5m refresh is a no-op when the value is unchanged, so there are no spurious restarts.
+- The 5m refresh is a no-op when the value is unchanged.
 - Each app gets its own provider-backed entries even when two apps hold the same value.
 - SDK server down means nothing syncs, but existing Secrets stay intact, so the symptom is staleness, not outage.
 
@@ -75,6 +78,10 @@ kubectl get externalsecret <name> -n <ns> -o jsonpath='{.status.conditions[?(@.t
 ```
 
 If a pod starts but reads an empty variable, it's a key-name mismatch, not a sync failure. Compare the deployment's `secretKeyRef.key` values against the secret's key names.
+
+## Never use a go-template that can fail on a Secret
+
+A go-template referencing a field that turns out to be absent makes kubectl print the **entire raw object** as part of its error. On a Secret that is a full value dump into the transcript. That is how the worst leak in this cluster's history happened. The `range` forms above cannot fail that way; anything using `index` or a dotted path can. Prefer `range`, and never point a speculative template at a Secret to find out what is in it.
 
 ## If a cluster credential leaks
 

@@ -1,82 +1,80 @@
 # Operations
 
-## Storage: one replica on one box
+## Storage: directories on the node's root filesystem
 
-Longhorn runs at `defaultReplicaCount: 1`, with data under `/var/lib/longhorn` on the node's own disk. There is no second replica and no second node, so **the off-box backup is the only real redundancy.** Never delete a production volume without explicit approval.
+There is no Longhorn, no replication, and no block-storage CSI. Every volume is a directory under the local-path provisioner on the node's RAID1 root. RAID1 survives one disk dying; it is not a backup and does not survive the machine.
 
-Two StorageClasses are both marked default, k3s's `local-path` and `longhorn`, so a PVC that names neither is a coin flip. Always set `storageClassName`; run `kubectl get sc` to see what exists. A third class, backed by the host provider's block-storage CSI driver, is deliberately not default and exists for volumes that should outlive the node.
+Two classes, both `rancher.io/local-path`, both `WaitForFirstConsumer`:
 
-Volumes expand online, so start small:
+| Class | Reclaim | For |
+|---|---|---|
+| `local-path` (default) | Delete | Rebuildable state. The registry uses it. |
+| `local-path-retain` | Retain | Everything that matters: both databases, Toppics uploads, collector state. |
 
-```bash
-kubectl patch pvc <name> -n <ns> -p '{"spec":{"resources":{"requests":{"storage":"20Gi"}}}}'
-```
+The retaining class exists because both application Kustomizations prune. Deleting a stateful PVC by accident would otherwise take the directory with it; with Retain the data stays as a Released PV and the cost is a manual rebind.
+
+**Neither class allows volume expansion.** `allowVolumeExpansion` is false, so a PVC cannot be grown in place. Growing one means a new claim and a copy, so size stateful claims with room to spare.
+
+Always set `storageClassName` explicitly, and remember the cluster overlay repatches it; see `gitops.md`.
 
 ## How backups actually work
 
-Two RecurringJobs in `infrastructure/core/longhorn/recurring-jobs.yaml`, both `task: backup`, both writing to S3-compatible object storage:
+Four CronJobs, all writing to the same S3-compatible bucket, all keeping fourteen days. Retention is enforced in the job rather than by a lifecycle rule, deliberately, so it lives in git.
 
-| Job | Cron in the manifest | Fires at | Retains |
-|-----|---------------------|----------|---------|
-| `daily-backup` | `30 7 * * *` | 02:00 UTC daily | 7 |
-| `weekly-backup` | `30 8 * * 0` | 03:00 UTC Sunday | 4 |
+| Job | Namespace | UTC | Destination prefix |
+|---|---|---|---|
+| `timescale-dump` | `timescale` | 02:30 | `dumps/timescale/<date>/` |
+| `toppics-dump` | `toppics` | 02:45 | `dumps/toppics/<date>/` |
+| `timescale-dump` | `timescale-dev` | 03:30 | `dumps/timescale-dev/<date>/` |
+| `k3s-datastore-backup` | `k3s-backup` | 04:30 | `control-plane/polaris-k3s/<date>/state.db.gz` |
 
-The cron strings are offset by the cluster's UTC+05:30 locale, so they don't read as the UTC times they produce. Check an actual `Backup` timestamp before concluding a schedule is wrong.
+The schedules are staggered so they never share the node's disk or the same connection to the bucket.
 
-**There is no snapshot job.** Nothing runs hourly, and nothing is kept locally on purpose. So the worst-case recovery point is roughly 24 hours. Whatever happened since 02:00 UTC is gone with the disk. State that plainly when someone asks what an outage costs; don't imply finer granularity than exists.
+These are logical dumps on a nightly schedule. **There is no WAL archiving, no snapshot job, and nothing kept locally.** The worst-case recovery point is roughly 24 hours. State that plainly when someone asks what an outage costs; do not imply finer granularity than exists.
 
-The target and its credentials are set in two places that must agree: `backupTarget` / `backupTargetCredentialSecret` in the Helm values, and a `BackupTarget` resource with the matching `backupTargetURL` and `credentialSecret`. The credential secret itself arrives through an ExternalSecret.
+Two details that matter:
 
-Longhorn reads the target at startup, so **an empty `backupTargetURL` almost always means the credentials hadn't synced when Longhorn came up**. Check the ExternalSecret first, then restart the manager rather than editing settings by hand.
-
-RecurringJobs only act on volumes that opt in, by label on the volume or by belonging to a job group. A job can therefore be perfectly healthy and be backing up nothing. Verify coverage rather than assuming it:
+- **The Toppics dump is a pair.** A SQLite `VACUUM INTO` file and `uploads.tar.gz` from the same dated prefix. Restore and verify them as a unit or the database describes files that are not there.
+- **The control-plane job depends on secrets encryption.** k3s has no snapshot command for a SQLite datastore, so the job takes a consistent copy through the SQLite backup API, gzips it and ships it off-host. Without `secrets-encryption: true`, `state.db` is a plaintext copy of every Secret in the cluster and this job would upload that nightly. Do not enable it on a host where `k3s secrets-encrypt status` reports Disabled. The decryption key stays in `/var/lib/rancher/k3s/server/cred/encryption-config.json` and is deliberately not in the backup, which also means a datastore restore needs that file from somewhere else.
 
 ```bash
-kubectl get recurringjob -n longhorn
-kubectl get volume.longhorn.io -n longhorn -o custom-columns=\
-NAME:.metadata.name,LABELS:.metadata.labels
-kubectl get backup -n longhorn --sort-by='.metadata.creationTimestamp' | tail -10
-kubectl get backupvolume -n longhorn
-kubectl get backuptarget default -n longhorn -o custom-columns=URL:.spec.backupTargetURL,AVAIL:.status.available
+kubectl get cronjob -A
+kubectl get job -A --sort-by='.metadata.creationTimestamp' | tail -10
 ```
 
-A new volume with no job label is silently unprotected. Check this whenever you add a stateful app.
+A stateful workload with no dump job is silently unprotected. Check this whenever you add one.
 
 ## Restoring
 
-**One volume.** Never restore over a live volume. The restore is a new volume, and the old one is your rollback.
+**One database.** Never restore over a live one.
 
-1. Find the backup: `kubectl get backup -n longhorn --sort-by='.metadata.creationTimestamp'`.
-2. Scale the workload to zero so nothing writes during the swap.
-3. Create a **new** volume from the backup, then a PV/PVC bound to it.
-4. Repoint the deployment at the new PVC and scale back up.
-5. Verify the data is actually there and current before deleting anything.
+1. Pick the dated prefix and pull the archive set, globals included.
+2. Scale the consuming workloads to zero.
+3. `createdb -T template0`, then create every extension **at the version the dump came from**. This is the trap: the Postgres image installs newer extension versions into `template1`, a plain `createdb` inherits them, and `CREATE EXTENSION IF NOT EXISTS ... VERSION '<old>'` then silently does nothing. It surfaces much later as a catalog version mismatch or a missing hypertable id in the middle of a COPY.
+4. For TimescaleDB, run `timescaledb_pre_restore()` before `pg_restore` and `timescaledb_post_restore()` after, and do not use parallel restore workers.
+5. Verify by row count per table on both sides before anything reconnects.
 
-If the PVC was deleted but the Longhorn volume survives, you can skip the restore and just bind a fresh PVC to the existing volume. If both are gone, it's a restore from backup.
+Globals deliberately omit password hashes, so application role passwords come back from the secret store. The db-init Jobs do exactly that on their first run, which is why the database layer is a separate Kustomization the applications depend on: those Jobs are idempotent against a finished restore and destructive against a half-finished one.
+
+**One file volume.** Scale to zero, restore beside the live directory, swap, verify, then delete. With the retaining class a Released PV can also simply be rebound.
 
 **The whole node.** This is the case the design is built around, and it works because nothing durable lives only on the box:
 
-1. Provision a fresh server, install k3s with the same disable flags.
+1. Provision a fresh server and install k3s with the same config file.
 2. Bootstrap Flux against the deployment branch. It rebuilds every namespace, workload, and policy from git.
-3. ESO re-pulls every secret from the configured provider because none of them were on the node.
-4. Point Longhorn at the same backup target and restore volumes from object storage.
-5. DNS and certificates re-provision themselves once the Gateway is up.
+3. ESO re-pulls every secret from the provider because none of them were on the node.
+4. Restore the databases and file volumes from the nightly dumps.
+5. DNS and certificates re-provision themselves once the Gateway is up, except the apex records; see `platform.md`.
 
-The recovery point is the last successful backup, not the moment of failure. Rehearse a single-volume restore occasionally because an untested backup is a guess.
+The recovery point is the last successful dump, not the moment of failure. Rehearse a restore occasionally, because an untested backup is a guess.
 
 ## k3s upgrades
 
 Single node, so every upgrade is downtime. Say so before starting.
 
-The operator runs the installer over SSH. **Every flag on the current unit must be repeated**, because dropping one re-enables a component Cilium already provides and breaks networking, and the installer does not carry the old arguments forward. Read them off the running server rather than retyping a remembered list:
+The server is configured by file, not by flags: `/etc/rancher/k3s/config.yaml`, whose reviewed source is checked into the cluster directory as `k3s-server-config.yaml`. That is a real improvement over the old flag soup, but it means **the config file is load-bearing and must not drift from the repo copy**. It disables flannel, kube-proxy, the network policy controller, the embedded Helm controller, Traefik and ServiceLB, because Cilium owns all of that; dropping one of those lines re-enables a component Cilium already provides and breaks networking.
 
-```bash
-sudo sed -n '/ExecStart=/,/^$/p' /etc/systemd/system/k3s.service
-```
-
-Expect more than the obvious four: alongside the disables for the flannel backend, the network policy controller, traefik, and servicelb, there is a separate flag disabling kube-proxy, plus TLS SANs and kubelet and controller tuning that are just as load-bearing.
-
-Rollback is the same installer with the previous version; the datastore under `/var/lib/rancher/k3s/server/db/` is preserved. Afterwards, verify with a real HTTPS request from outside the cluster, not just pod status.
+Pin the version deliberately. Cilium documents which Kubernetes minors it supports, and k3s moves faster than that guarantee. Rollback is the same installer with the previous version; the datastore under `/var/lib/rancher/k3s/server/db/` is preserved. Afterwards, verify with a real HTTPS request from outside the cluster, not just pod status.
 
 ## Component upgrades
 
@@ -85,15 +83,16 @@ Everything infra is a HelmRelease. Bump `spec.chart.spec.version` and push; Flux
 Risk order, highest first:
 
 - **Cilium:** single minor jumps only, and check Gateway API CRD compatibility. It's CNI and ingress at once, so a bad upgrade takes networking *and* routing down together. Verify both pod egress and gateway routing after.
-- **Longhorn:** data plane. Some versions can't be skipped; check the upgrade path.
 - **cert-manager / ESO:** watch for CRD API version changes.
-- **external-dns, Reloader:** stateless watchers, low risk.
+- **external-dns:** stateless watcher, low risk, but it holds record ownership; see `platform.md`.
+
+The helm-controller uses server-side apply, and container `env` is a list keyed by name. A patch that adds a variable a chart preset already sets is rejected as a duplicate rather than merged. That is a real failure mode when overriding collector or agent values.
 
 Rolling back an *application* is different: revert the automated commit that bumped the image tag, or pin the previous tag by hand. Note that the registry's nightly GC keeps only the two most recent tags per pattern, so rolling back far enough means rebuilding.
 
 ## Hardening invariants
 
-Workloads run non-root with a read-only root filesystem, no privilege escalation, all capabilities dropped, and a default-deny NetworkPolicy. Secrets come from the external store, never git or ConfigMaps. CI authenticates by OIDC, so there are no long-lived registry credentials to leak.
+Workloads run non-root with a read-only root filesystem, no privilege escalation, all capabilities dropped, and a default-deny NetworkPolicy. Secrets come from the external store, never git or ConfigMaps. Secret values are encrypted at rest in the datastore. CI authenticates by OIDC, so there are no long-lived registry credentials to leak.
 
 Never: expose the API server publicly, disable a network policy to debug, grant an app cluster-admin, or mount the Docker socket or host filesystem.
 
@@ -101,8 +100,8 @@ Never: expose the API server publicly, disable a network policy to debug, grant 
 
 ```bash
 kubectl get pods -A --field-selector=status.phase!=Running,status.phase!=Succeeded
-kubectl get kustomization,helmrelease -n flux-system
+kubectl get kustomization,helmrelease -A
 kubectl get externalsecret,certificate -A
-kubectl get volume.longhorn.io -n longhorn
-kubectl get gateway -A
+kubectl get pvc -A
+kubectl get gateway -A -o wide
 ```
