@@ -61,6 +61,7 @@ Keep the control socket path under 104 bytes, so not in a scratchpad directory, 
 | Build pipelines, dev vs prod images, registry auth | `ci-cd.md` |
 | Storage, backups, restore, upgrades, hardening | `operations.md` |
 | The server itself: disks, firewall, mail, k3s config | `host.md` |
+| Logs, metrics, traces through the Cairn database | `observability.md` |
 | Debugging | `troubleshooting.md` |
 
 ## Gotchas
